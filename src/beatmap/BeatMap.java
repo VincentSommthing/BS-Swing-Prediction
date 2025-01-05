@@ -1,6 +1,12 @@
 package beatmap;
 
-public class BeatMap {
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class Beatmap {
+    public Beatmap(ObjectMapper json) {
+
+    }
+
     public Note[] notes;
     public Arc[] arcs;
     public Chain[] chains;

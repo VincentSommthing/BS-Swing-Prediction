@@ -1,4 +1,5 @@
-package swingEngine;
+package swingPredictor;
+
 public interface Swing {
     /**
      * Calculate the cost of the current swing given the previous swing
