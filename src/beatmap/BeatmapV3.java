@@ -19,7 +19,13 @@ public class BeatmapV3 {
     }
 
     public String toString() {
-        return "BeatmapV3: (" + version + "). Notes: " + colorNotes.length + ", Bombs: " + bombNotes.length + ", Obstacles: " + obstacles.length + ", Arcs: " + sliders.length + ", Chains: " + burstSliders.length;
+        return String.format("BeatmapV3: (%s) [Notes:%d, Bombs:%d, Obstacles:%d, Arcs:%d, Chains:%d]",
+        version, 
+        colorNotes.length,
+        bombNotes.length, 
+        obstacles.length,
+        sliders.length,
+        burstSliders.length);
     }
 
     public static class ColorNote {
