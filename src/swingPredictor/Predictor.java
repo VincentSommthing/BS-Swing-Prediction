@@ -4,8 +4,11 @@ import beatmap.BeatmapV3;
 
 public class Predictor<T extends Swing> {
     private SwingProposer<T> proposer;
-    public Predictor(SwingProposer<T> swingProposer) {
+    private CostFn<T> costFn;
+
+    public Predictor(SwingProposer<T> swingProposer, CostFn<T> costFn) {
         proposer = swingProposer;
+        this.costFn = costFn;
     }
 
     /**

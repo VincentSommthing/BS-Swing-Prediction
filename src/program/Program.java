@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import defaultSwingPredictor.*;
+import swingPredictor.Predictor;
+
 import java.io.File;
 import java.util.Set;
 
@@ -19,7 +22,13 @@ public class Program {
         String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
         String testV3 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/387a0 /ExpertPlusStandard.dat";
         BeatmapV3 beatmap = getBeatmapFromPath(testV3);
-        System.out.println(beatmap);
+
+        DefaultCostFn costFn = new DefaultCostFn();
+        DefaultSwingProposer proposer = new DefaultSwingProposer();
+
+        Predictor<DefaultSwing> predictor = new Predictor<DefaultSwing>(proposer, costFn);
+        DefaultSwing[] swings = predictor.predict(beatmap);
+        System.out.println(swings);
     }
 
     /**
