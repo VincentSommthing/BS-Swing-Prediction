@@ -5,6 +5,8 @@ import beatmap.BeatmapV3;
 /**
  * For each note, arc, chain, and group of bombs, the predictor proposes
  * a list of Swings by running the approriate propose method.
+ * All notes, arcs, and chains can be assumed to be right-handed.
+ * @param <T> Swing type
  */
 public interface SwingProposer<T extends Swing> {
     /**

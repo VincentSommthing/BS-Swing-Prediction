@@ -1,7 +1,7 @@
 package swingPredictor;
 
 /**
- * Represents a swing
+ * Represents a right-handed swing
  */
 public interface Swing {
     

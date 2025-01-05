@@ -1,7 +1,8 @@
 package swingPredictor;
 
 /**
- * Cost function to calculate cost of swings and transitions between swings
+ * Cost function to calculate cost of swings and transitions between swings.
+ * All swings can be assumed to be right-handed.
  * @param <T> class of swings this cost function is for
  */
 public interface CostFn<T extends Swing> {
