@@ -15,6 +15,11 @@ public class BeatmapV2 {
         public int _lineIndex;
         public int width;
     }
+    public static class Event {
+        public float _time;
+        public int _type;
+        public float _floatValue;
+    }
 
     public String _version;
     public Note[] _notes;
