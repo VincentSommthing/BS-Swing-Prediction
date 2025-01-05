@@ -1,13 +1,13 @@
 package swingPredictor;
 
-import beatmap.Beatmap;
+import beatmap.BeatmapV3;
 
 public class Predictor {
     private SwingProposer proposer;
     public Predictor(SwingProposer swingProposer) {
         proposer = swingProposer;
     }
-    public Swing[] predict(Beatmap beatmap) {
+    public Swing[] predict(BeatmapV3 beatmap) {
         // TODO Implement predict
         return new Swing[] {};
     }
