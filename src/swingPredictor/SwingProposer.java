@@ -6,9 +6,32 @@ import beatmap.BeatmapV3;
  * For each note, arc, chain, and group of bombs, the predictor proposes
  * a list of Swings by running the approriate propose method.
  */
-public interface SwingProposer {
-    public Swing[] proposeNote(BeatmapV3.ColorNote note);
-    public Swing[] proposeArc(BeatmapV3.Arc arc);
-    public Swing[] proposeChain(BeatmapV3.Chain chain);
-    public Swing[] proposeBombs(BeatmapV3.Bomb[] bombs);
+public interface SwingProposer<T extends Swing> {
+    /**
+     * Propose a list of Swings for a given note
+     * @param note
+     * @return list of proposed Swings
+     */
+    public T[] proposeNote(BeatmapV3.ColorNote note);
+
+    /**
+     * Propose a list of Swings for a given arc
+     * @param arc
+     * @return list of proposed Swings
+     */
+    public T[] proposeArc(BeatmapV3.Arc arc);
+
+    /**
+     * Propose a list of Swings for a given chain
+     * @param chain
+     * @return list of proposed Swings
+     */
+    public T[] proposeChain(BeatmapV3.Chain chain);
+
+    /**
+     * Propose a list of Swings for a given group of bombs
+     * @param bombs
+     * @return list of proposed Swings
+     */
+    public T[] proposeBombs(BeatmapV3.Bomb[] bombs);
 }

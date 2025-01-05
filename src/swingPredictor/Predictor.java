@@ -6,6 +6,11 @@ public class Predictor<T extends Swing> {
     private SwingProposer<T> proposer;
     private CostFn<T> costFn;
 
+    /**
+     * Constructor
+     * @param swingProposer
+     * @param costFn
+     */
     public Predictor(SwingProposer<T> swingProposer, CostFn<T> costFn) {
         proposer = swingProposer;
         this.costFn = costFn;
