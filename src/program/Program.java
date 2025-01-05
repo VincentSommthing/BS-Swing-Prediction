@@ -14,13 +14,19 @@ import java.util.Set;
 public class Program {
     private static final Set<String> V2VERSIONS = Set.of("2.0.0", "2.2.0", "2.4.0", "2.5.0");
     private static final Set<String> V2_6VERSIONS = Set.of("2.6.0");
-    private static final Set<String> V3VERSIONS = Set.of("3.0.0");
+    private static final Set<String> V3VERSIONS = Set.of("3.0.0", "3.1.0", "3.2.0", "3.3.0");
     public static void main(String[] args) {
-        String testStr = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
-        BeatmapV3 beatmap = getBeatmapFromPath(testStr);
+        String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
+        String testV3 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/387a0 /ExpertPlusStandard.dat";
+        BeatmapV3 beatmap = getBeatmapFromPath(testV3);
         System.out.println(beatmap);
     }
 
+    /**
+     * Creates a BeatmapV3 object given a path to a beatmap JSON file
+     * @param path path to file
+     * @return beatmap object
+     */
     public static BeatmapV3 getBeatmapFromPath(String path) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -47,7 +53,7 @@ public class Program {
                 BeatmapV2_6 beatmapV2_6 = objectMapper.convertValue(json, BeatmapV2_6.class);
                 // convert to v3
                 return new BeatmapV3(beatmapV2_6);
-                
+
             } else if (V3VERSIONS.contains(version)) {
                 return objectMapper.convertValue(json, BeatmapV3.class);
 
