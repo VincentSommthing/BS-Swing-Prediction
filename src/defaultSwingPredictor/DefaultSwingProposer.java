@@ -6,6 +6,9 @@ import beatmap.BeatmapV3.Chain;
 import beatmap.BeatmapV3.ColorNote;
 import swingPredictor.SwingProposer;
 
+/**
+ * Default swing proposer
+ */
 public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
 
     @Override
