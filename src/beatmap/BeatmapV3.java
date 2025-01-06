@@ -29,55 +29,55 @@ public class BeatmapV3 {
     }
 
     public static class ColorNote {
-        float b; // Beat
-        int x; // Line Index
-        int y; // Line Layer
-        int c; // Color
-        int d; // Cut Direction
-        int a; // Angle Offset
+        public float b; // Beat
+        public int x; // Line Index
+        public int y; // Line Layer
+        public int c; // Color
+        public int d; // Cut Direction
+        public int a; // Angle Offset
     }
     public static class Bomb {
-        float b; // Beat
-        int x; // Line Index
-        int y; // Line Layer
+        public float b; // Beat
+        public int x; // Line Index
+        public int y; // Line Layer
     }
     public static class Arc {
-        int c; // Color
-        float b; // Head Beat
-        int x; // Head Line Index
-        int y; // Head Line Layer
-        int d; // Head Cut Direction
-        float mu; // Head Control Point Length Multiplier
-        float tb; // Tail Beat
-        int tx; // Tail Line Index
-        int ty; // Tail Line Layer
-        int tc; // Tail Cut Direction
-        float tmu; // Tail Control Point Length Multiplier
-        int m; // Mid-Anchor Mode
+        public int c; // Color
+        public float b; // Head Beat
+        public int x; // Head Line Index
+        public int y; // Head Line Layer
+        public int d; // Head Cut Direction
+        public float mu; // Head Control Point Length Multiplier
+        public float tb; // Tail Beat
+        public int tx; // Tail Line Index
+        public int ty; // Tail Line Layer
+        public int tc; // Tail Cut Direction
+        public float tmu; // Tail Control Point Length Multiplier
+        public int m; // Mid-Anchor Mode
     }   
     public static class Chain {
-        int c; // Color
-        float b; // Head Beat
-        int x; // Head Line Index
-        int y; // Head Line Layer
-        int d; // Head Cut Direction
-        float tb; // Tail Beat
-        int tx; // Tail Line Index
-        int ty; // Tail Line Layer
-        int sc; // Slice Count
-        float s; // Squish Factor
+        public int c; // Color
+        public float b; // Head Beat
+        public int x; // Head Line Index
+        public int y; // Head Line Layer
+        public int d; // Head Cut Direction
+        public float tb; // Tail Beat
+        public int tx; // Tail Line Index
+        public int ty; // Tail Line Layer
+        public int sc; // Slice Count
+        public float s; // Squish Factor
     }
     public static class Obstacle {
-        float b; // Beat
-        float d; // Duration
-        int x; // Line Index
-        int y; // Line Layer
-        int w; // Width
-        int h; // Height
+        public float b; // Beat
+        public float d; // Duration
+        public int x; // Line Index
+        public int y; // Line Layer
+        public int w; // Width
+        public int h; // Height
     }
     public static class BpmEvent {
-        float b; // Beat
-        float m; // BPM
+        public float b; // Beat
+        public float m; // BPM
     }
 
     public String version;

@@ -32,6 +32,7 @@ public class DefaultCostFn implements CostFn<DefaultSwing> {
     BombSwingCost bombSwingCost;
 
     public DefaultCostFn() {
+        // TODO
         this.noteSwingCost = new NoteSwingCost();
         this.arcSwingCost = new ArcSwingCost();
         this.arcSwingCost = new ArcSwingCost();
@@ -43,6 +44,9 @@ public class DefaultCostFn implements CostFn<DefaultSwing> {
         return 0.0f;
     }
 
+    /**
+     * Calculates the cost of a swing
+     */
     @Override
     public float swingCost(DefaultSwing swing, float startTime, float endTime) {
         return swing.cost(this.noteSwingCost, this.arcSwingCost, this.bombSwingCost);

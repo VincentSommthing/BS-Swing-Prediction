@@ -13,6 +13,7 @@ import swingPredictor.Predictor;
 
 import java.io.File;
 import java.util.Set;
+import java.util.List;
 
 public class Program {
     private static final Set<String> V2VERSIONS = Set.of("2.0.0", "2.2.0", "2.4.0", "2.5.0");
@@ -27,7 +28,7 @@ public class Program {
         DefaultSwingProposer proposer = new DefaultSwingProposer();
 
         Predictor<DefaultSwing> predictor = new Predictor<DefaultSwing>(proposer, costFn);
-        DefaultSwing[] swings = predictor.predict(beatmap);
+        List<DefaultSwing> swings = predictor.predict(beatmap);
         System.out.println(swings);
     }
 

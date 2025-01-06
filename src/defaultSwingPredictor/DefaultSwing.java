@@ -20,6 +20,13 @@ public class DefaultSwing implements Swing {
         this.isForehand = isForehand;
     }
 
+    /**
+     * Calculate the cost of swing
+     * @param noteSwingCost
+     * @param arcSwingCost
+     * @param bombSwingCost
+     * @return
+     */
     float cost(
         Function<DefaultNoteSwing, Float> noteSwingCost,
         Function<DefaultArcSwing, Float> arcSwingCost,
