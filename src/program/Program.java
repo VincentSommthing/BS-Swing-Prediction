@@ -19,7 +19,7 @@ public class Program {
     private static final Set<String> V2_6VERSIONS = Set.of("2.6.0");
     private static final Set<String> V3VERSIONS = Set.of("3.0.0", "3.1.0", "3.2.0", "3.3.0");
     public static void main(String[] args) {
-        String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
+        // String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
         String testV3 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/387a0 /ExpertPlusStandard.dat";
         BeatmapV3 beatmap = getBeatmapFromPath(testV3);
 

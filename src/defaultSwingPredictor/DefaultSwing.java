@@ -13,7 +13,18 @@ public class DefaultSwing implements Swing {
     public float rotation;
     public boolean isForehand;
 
-    float cost(Function<DefaultSwing, Float> noteSwingCost, Function<DefaultSwing, Float> arcSwingCost, Function<DefaultSwing, Float> bombSwingCost) {
+    public DefaultSwing(float x, float y, float rotation, boolean isForehand) {
+        this.x = x;
+        this.y = y;
+        this.rotation = rotation;
+        this.isForehand = isForehand;
+    }
+
+    float cost(
+        Function<DefaultNoteSwing, Float> noteSwingCost,
+        Function<DefaultArcSwing, Float> arcSwingCost,
+        Function<DefaultBombSwing, Float> bombSwingCost) {
+
         return 0.0f;
     }
 
