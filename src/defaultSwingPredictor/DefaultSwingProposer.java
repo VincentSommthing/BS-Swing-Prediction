@@ -6,31 +6,33 @@ import beatmap.BeatmapV3.Chain;
 import beatmap.BeatmapV3.ColorNote;
 import swingPredictor.SwingProposer;
 
+import java.util.List;
+
 /**
  * Default swing proposer
  */
 public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
 
     @Override
-    public DefaultSwing[] proposeNote(ColorNote note) {
+    public List<DefaultSwing> proposeNote(List<ColorNote> note) {
         // TODO
         return null;
     }
 
     @Override
-    public DefaultSwing[] proposeArc(Arc arc) {
+    public List<DefaultSwing> proposeArc(Arc arc) {
         // TODO
         return null;
     }
 
     @Override
-    public DefaultSwing[] proposeChain(Chain chain) {
+    public List<DefaultSwing> proposeChain(Chain chain) {
         // TODO
         return null;
     }
 
     @Override
-    public DefaultSwing[] proposeBombs(Bomb[] bombs) {
+    public List<DefaultSwing> proposeBombs(List<Bomb> bombs) {
         // TODO
         return null;
     }

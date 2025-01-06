@@ -46,7 +46,7 @@ public class Predictor<T extends Swing> {
             super(chain.b, chain);
         }
     }
-        /**
+    /**
      * Stores a note and the beat it occurs at
      */
     private class BombBeatPair extends BeatPair<Bomb> {
