@@ -9,6 +9,7 @@ import beatmap.BeatmapV3.ColoredObject;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Predictor<T extends Swing> {
     /**
@@ -94,8 +95,44 @@ public class Predictor<T extends Swing> {
                 currentGroup.objs.add(beatPair.obj);
             }
         }
-
         return groups;
+    }
+
+
+    /**
+     * Represents two lists, one for each color
+     */
+    private class ColorSeparatedList<S> {
+        private List<S>[] lists;
+
+        @SuppressWarnings("unchecked")
+        public ColorSeparatedList() {
+            this.lists = (ArrayList<S>[]) new ArrayList[2];
+            this.lists[0] = new ArrayList<>();
+            this.lists[1] = new ArrayList<>();
+        }
+
+        /**
+         * Get the list corresponding to the given color
+         * @param color
+         * @return list
+         */
+        public List<S> get(int color) {
+            return this.lists[color];
+        }
+    }
+    /**
+     * Separates a list of colored beatmap objects by color
+     * @param <S> Type of colored beatmap object
+     * @param array Array to separate
+     * @return Color separated list
+     */
+    private <S extends ColoredObject> ColorSeparatedList<S> separateByColor(S[] array) {
+        ColorSeparatedList<S> colSepList = new ColorSeparatedList<>();
+        for (S obj : array) {
+            colSepList.get(obj.c).add(obj);
+        }
+        return colSepList;
     }
 
     private SwingProposer<T> proposer;
@@ -120,7 +157,9 @@ public class Predictor<T extends Swing> {
         // TODO Implement predict
 
         // Separate colorNotes, arcs, chains by color
-        List<BeatPair<ColorNote>> notePairs0 = new ArrayList<>();
+        ColorSeparatedList<ColorNote> colorSeparatedNotes = this.separateByColor(beatmap.colorNotes);
+        ColorSeparatedList<Arc> colorSeparatedArcs = this.separateByColor(beatmap.sliders);
+        ColorSeparatedList<Chain> colorSeparatedChains = this.separateByColor(beatmap.burstSliders);
 
         // Create a list of beat pairs
         List<BeatPair<?>> beatPairs = new ArrayList<>();

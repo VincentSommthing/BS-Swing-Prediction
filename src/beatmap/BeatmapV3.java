@@ -29,7 +29,7 @@ public class BeatmapV3 {
     }
 
     public static abstract class ColoredObject {
-        int c; // Color
+        public int c; // Color
     }
 
     public static class ColorNote extends ColoredObject {
