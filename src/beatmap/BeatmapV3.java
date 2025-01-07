@@ -28,6 +28,8 @@ public class BeatmapV3 {
         burstSliders.length);
     }
 
+    private static final int[] MIRROR_DIRECTIONS = {0, 1, 3, 2, 5, 4, 7, 6, 8};
+
     public static abstract class BeatObject {
         public float b; // Head Beat
     }
@@ -44,12 +46,17 @@ public class BeatmapV3 {
         public void mirror() {
             super.mirror();
             c = 1 - c;
+            d = MIRROR_DIRECTIONS[d];
         }
     }
     public static abstract class Slider extends ColoredObject {
         public int tb; // Tail Beat
         public int tx; // Tail Line Index
         public int ty; // Tail Line Layer
+        public void mirror() {
+            super.mirror();
+            tx = 3 - tx;
+        }
     }
 
     public static class ColorNote extends ColoredObject {
@@ -61,6 +68,10 @@ public class BeatmapV3 {
         public int tc; // Tail Cut Direction
         public float tmu; // Tail Control Point Length Multiplier
         public int m; // Mid-Anchor Mode
+        public void mirror() {
+            super.mirror();
+            tc = MIRROR_DIRECTIONS[tc];
+        }
     }   
     public static class Chain extends Slider {
         public int sc; // Slice Count
