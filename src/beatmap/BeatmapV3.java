@@ -28,59 +28,50 @@ public class BeatmapV3 {
         burstSliders.length);
     }
 
-    public static abstract class ColoredObject {
+    public static abstract class BeatObject {
+        public float b; // Head Beat
+    }
+    public static abstract class PositionedObject extends BeatObject {
+        public int x; // Line Index
+        public int y; // Line Layer
+        public void mirror() {
+            x = 3 - x;
+        }
+    }
+    public static abstract class ColoredObject extends PositionedObject {
         public int c; // Color
+        public int d; // Head Cut Direction
+        public void mirror() {
+            super.mirror();
+            c = 1 - c;
+        }
+    }
+    public static abstract class Slider extends ColoredObject {
+        public int tb; // Tail Beat
+        public int tx; // Tail Line Index
+        public int ty; // Tail Line Layer
     }
 
     public static class ColorNote extends ColoredObject {
-        public float b; // Beat
-        public int x; // Line Index
-        public int y; // Line Layer
-        public int c; // Color
-        public int d; // Cut Direction
         public int a; // Angle Offset
     }
-    public static class Bomb {
-        public float b; // Beat
-        public int x; // Line Index
-        public int y; // Line Layer
-    }
-    public static class Arc extends ColoredObject{
-        public int c; // Color
-        public float b; // Head Beat
-        public int x; // Head Line Index
-        public int y; // Head Line Layer
-        public int d; // Head Cut Direction
+    public static class Bomb extends PositionedObject {}
+    public static class Arc extends Slider {
         public float mu; // Head Control Point Length Multiplier
-        public float tb; // Tail Beat
-        public int tx; // Tail Line Index
-        public int ty; // Tail Line Layer
         public int tc; // Tail Cut Direction
         public float tmu; // Tail Control Point Length Multiplier
         public int m; // Mid-Anchor Mode
     }   
-    public static class Chain extends ColoredObject {
-        public int c; // Color
-        public float b; // Head Beat
-        public int x; // Head Line Index
-        public int y; // Head Line Layer
-        public int d; // Head Cut Direction
-        public float tb; // Tail Beat
-        public int tx; // Tail Line Index
-        public int ty; // Tail Line Layer
+    public static class Chain extends Slider {
         public int sc; // Slice Count
         public float s; // Squish Factor
     }
-    public static class Obstacle {
-        public float b; // Beat
+    public static class Obstacle extends PositionedObject{
         public float d; // Duration
-        public int x; // Line Index
-        public int y; // Line Layer
         public int w; // Width
         public int h; // Height
     }
-    public static class BpmEvent {
-        public float b; // Beat
+    public static class BpmEvent extends BeatObject{
         public float m; // BPM
     }
 
