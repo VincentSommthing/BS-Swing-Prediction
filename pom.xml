@@ -4,6 +4,24 @@
   <artifactId>BS-Swing-Prediction</artifactId>
   <version>1</version>
 
+  <properties>
+    <maven.compiler.release>23</maven.compiler.release>
+  </properties>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>23</release>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
