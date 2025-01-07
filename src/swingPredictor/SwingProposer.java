@@ -20,8 +20,8 @@ public interface SwingProposer<T extends Swing> {
      * @param notes
      * @return list of proposed Swings
      */
-    default List<T> proposeNote(List<ColorNote> notes) {
-        throw new UnsupportedOperationException("Must implement proposeNote");
+    default List<T> proposeNote(List<ColorNote> note) {
+        throw new UnsupportedOperationException("Need to implement proposeNote");
     };
 
     /**

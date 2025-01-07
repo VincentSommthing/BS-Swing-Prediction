@@ -28,7 +28,11 @@ public class BeatmapV3 {
         burstSliders.length);
     }
 
-    public static class ColorNote {
+    public static abstract class ColoredObject {
+        int c; // Color
+    }
+
+    public static class ColorNote extends ColoredObject {
         public float b; // Beat
         public int x; // Line Index
         public int y; // Line Layer
@@ -41,7 +45,7 @@ public class BeatmapV3 {
         public int x; // Line Index
         public int y; // Line Layer
     }
-    public static class Arc {
+    public static class Arc extends ColoredObject{
         public int c; // Color
         public float b; // Head Beat
         public int x; // Head Line Index
@@ -55,7 +59,7 @@ public class BeatmapV3 {
         public float tmu; // Tail Control Point Length Multiplier
         public int m; // Mid-Anchor Mode
     }   
-    public static class Chain {
+    public static class Chain extends ColoredObject {
         public int c; // Color
         public float b; // Head Beat
         public int x; // Head Line Index
