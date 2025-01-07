@@ -29,6 +29,7 @@ public class BeatmapV3 {
     }
 
     private static final int[] MIRROR_DIRECTIONS = {0, 1, 3, 2, 5, 4, 7, 6, 8};
+    private static final int[] MIRROR_ANCHOR = {0, 2, 1};
 
     public static abstract class BeatObject {
         public float b; // Head Beat
@@ -50,7 +51,7 @@ public class BeatmapV3 {
         }
     }
     public static abstract class Slider extends ColoredObject {
-        public int tb; // Tail Beat
+        public float tb; // Tail Beat
         public int tx; // Tail Line Index
         public int ty; // Tail Line Layer
         public void mirror() {
@@ -71,6 +72,7 @@ public class BeatmapV3 {
         public void mirror() {
             super.mirror();
             tc = MIRROR_DIRECTIONS[tc];
+            m = MIRROR_ANCHOR[m];
         }
     }   
     public static class Chain extends Slider {
