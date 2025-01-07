@@ -7,7 +7,7 @@ import beatmap.BeatmapV3;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+// import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import defaultSwingPredictor.*;
 import swingPredictor.Predictor;
@@ -24,36 +24,6 @@ public class Program {
         // String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
         String testV3 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/387a0 /ExpertPlusStandard.dat";
         BeatmapV3 beatmap = getBeatmapFromPath(testV3);
-
-        // mirror everything
-        for (BeatmapV3.ColorNote obj: beatmap.colorNotes) {
-            obj.mirror();
-        }
-        for (BeatmapV3.Bomb obj: beatmap.bombNotes) {
-            obj.mirror();
-        }
-        for (BeatmapV3.Arc obj: beatmap.sliders) {
-            obj.mirror();
-        }
-        for (BeatmapV3.Chain obj: beatmap.burstSliders) {
-            obj.mirror();
-        }
-
-        try{
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode originalJson = objectMapper.readTree(new File(testV3));
-            ObjectNode json = ((ObjectNode) originalJson);
-            JsonNode mirroredJson = objectMapper.convertValue(beatmap, JsonNode.class);
-            json.set("colorNotes", mirroredJson.get("colorNotes"));
-            json.set("bombNotes", mirroredJson.get("bombNotes"));
-            json.set("sliders", mirroredJson.get("sliders"));
-            json.set("burstSliders", mirroredJson.get("burstSliders"));
-            objectMapper.writeValue(new File("ExpertPlusStandard.dat"), json);
-            // System.out.println(originalJson.get("burstSliders").get(0));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
 
         DefaultCostFn costFn = new DefaultCostFn();
         DefaultSwingProposer proposer = new DefaultSwingProposer();

@@ -41,7 +41,7 @@ public class BeatmapV3 {
             x = 3 - x;
         }
     }
-    public static abstract class ColoredObject extends PositionedObject {
+    public static abstract class ColorObject extends PositionedObject {
         public int c; // Color
         public int d; // Head Cut Direction
         public void mirror() {
@@ -50,7 +50,7 @@ public class BeatmapV3 {
             d = MIRROR_DIRECTIONS[d];
         }
     }
-    public static abstract class Slider extends ColoredObject {
+    public static abstract class Slider extends ColorObject {
         public float tb; // Tail Beat
         public int tx; // Tail Line Index
         public int ty; // Tail Line Layer
@@ -60,7 +60,7 @@ public class BeatmapV3 {
         }
     }
 
-    public static class ColorNote extends ColoredObject {
+    public static class ColorNote extends ColorObject {
         public int a; // Angle Offset
     }
     public static class Bomb extends PositionedObject {}
