@@ -14,13 +14,13 @@ import java.util.List;
 public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
 
     @Override
-    public List<DefaultSwing> proposeNote(List<ColorNote> note) {
+    public List<DefaultSwing> proposeNote(List<ColorNote> prevNotes, float prevTime, List<ColorNote> currNotes, List<Bomb> currBombs, float currTime) {
         // TODO
         return null;
     }
 
     @Override
-    public List<DefaultSwing> proposeArc(Arc arc) {
+    public List<DefaultSwing> proposeArc(List<Arc> arcs) {
         // TODO
         return null;
     }

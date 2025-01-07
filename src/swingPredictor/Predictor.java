@@ -10,54 +10,9 @@ import beatmap.BeatmapV3.BeatObject;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Predictor<T extends Swing> {
-    /**
-     * Stores a beatmap object and the beat it occurs at
-     */
-    private static abstract class BeatPair<S extends BeatObject> {
-        float beat;
-        S obj;
-
-        public BeatPair() {}
-        public BeatPair(S obj) {
-            this.beat = obj.b;
-            this.obj = obj;
-        }
-    }
-    /**
-     * Stores a note and the beat it occurs at
-     */
-    private static class NoteBeatPair extends BeatPair<ColorNote> {
-        public NoteBeatPair(ColorNote note) {
-            super(note);
-        }
-    }
-    /**
-     * Stores an arc and the beat it occurs at
-     */
-    private static class ArcBeatPair extends BeatPair<Arc> {
-        public ArcBeatPair (Arc arc) {
-            super(arc);
-        }
-    }
-    /**
-     * Stores a chain and the beat it occurs at
-     */
-    private static class ChainBeatPair extends BeatPair<Chain> {
-        public ChainBeatPair(Chain chain) {
-            super(chain);
-        }
-    }
-    /**
-     * Stores a note and the beat it occurs at
-     */
-    private static class BombBeatPair extends BeatPair<Bomb> {
-        public BombBeatPair(Bomb bomb) {
-            super(bomb);
-        }
-    }
-
     /**
      * Represents two lists, one for each color
      */
@@ -105,6 +60,22 @@ public class Predictor<T extends Swing> {
     }
 
     /**
+     * Stores a beatmap object and the beat it occurs at
+     */
+    private static class BeatPair<S extends BeatObject> {
+        float beat;
+        S obj;
+
+        public BeatPair(S obj) {
+            if (obj instanceof Arc arc) {
+                this.beat = arc.tb;
+            } else {
+                this.beat = obj.b;
+            }
+            this.obj = obj;
+        }
+    }
+    /**
      * A group of objects that occur at the same beat
      */
     private class BeatGroup<S> {
@@ -114,6 +85,9 @@ public class Predictor<T extends Swing> {
             this.beat = beat;
             this.objs = new ArrayList<>();
         }
+        public static <U> int compare(BeatGroup<U> a, BeatGroup<U> b) {
+            return Float.compare(a.beat, b.beat);
+        }
     }
     /**
      * Groups beat pairs by beat
@@ -121,7 +95,13 @@ public class Predictor<T extends Swing> {
      * @param beatPairs List of beat pairs to group
      * @return List of beat groups
      */
-    private <S extends BeatObject> List<BeatGroup<S>> groupByBeat(List<BeatPair<S>> beatPairs) {
+    private <S extends BeatObject> List<BeatGroup<S>> groupByBeat(Iterable<S> beatObjects) {
+        // Turn into beat pairs
+        List<BeatPair<S>> beatPairs = new ArrayList<>();
+        for (S beatObject: beatObjects) {
+            beatPairs.add(new BeatPair<>(beatObject));
+        }
+
         // Initialize list of groups
         List<BeatGroup<S>> groups = new ArrayList<>();
 
@@ -144,27 +124,8 @@ public class Predictor<T extends Swing> {
         }
         return groups;
     }
-    
-    /**
-     * Groups each list in a color-separated list by beat
-     * @param <S> Type of beatmap object
-     * @param colSepList Color-separated list to group
-     * @return Color-separated list of beat groups
-     */
-    private <S extends BeatObject> ColorSeparatedPair<List<BeatGroup<S>>> groupByBeat(ColorSeparatedPair<List<BeatPair<S>>> colSepList) {
-        // Initialize a color-separated list of beat groups
-        ColorSeparatedPair<List<BeatGroup<S>>> colSepGroupsList = new ColorSeparatedPair<>();
-        // iterate through each color
-        for (int i = 0; i < 2; i++) {
-            // get the beat pairs corresponding to color i
-            List<BeatPair<S>> beatPairs = colSepList.get(i);
-            // group the beat pairs by beat
-            List<BeatGroup<S>> beatGroups = this.groupByBeat(beatPairs);
-            // assign the list of beat groups to the color-separated list
-            colSepGroupsList.set(i, beatGroups);
-        }
-        // return the list
-        return colSepGroupsList;
+    private <S extends BeatObject> List<BeatGroup<S>> groupByBeat(S[] beatObjects) {
+        return groupByBeat(Arrays.asList(beatObjects));
     }
 
     private SwingProposer<T> proposer;
@@ -189,34 +150,35 @@ public class Predictor<T extends Swing> {
         // TODO Implement predict
 
         // Separate colorNotes, arcs, chains by color
-        ColorSeparatedPair<List<ColorNote>> colorSeparatedNotes = this.separateByColor(beatmap.colorNotes);
-        ColorSeparatedPair<List<Arc>> colorSeparatedArcs = this.separateByColor(beatmap.sliders);
-        ColorSeparatedPair<List<Chain>> colorSeparatedChains = this.separateByColor(beatmap.burstSliders);
+        ColorSeparatedPair<List<ColorNote>> colorSeparatedNotes = separateByColor(beatmap.colorNotes);
+        ColorSeparatedPair<List<Arc>> colorSeparatedArcs = separateByColor(beatmap.sliders);
+        ColorSeparatedPair<List<Chain>> colorSeparatedChains = separateByColor(beatmap.burstSliders);
 
-        // Group each list by beat
-        // ColorSeparatedPair<List<BeatGroup<ColorNote>>> colorSeparatedNoteGroups = this.groupByBeat(colorSeparatedNotes);
+        // Group bombs by beat
+        List<BeatGroup<Bomb>> bombGroups = groupByBeat(beatmap.bombNotes);
 
-        // Create a list of beat pairs
-        List<BeatPair<?>> beatPairs = new ArrayList<>();
-        // Add all notes
-        for (ColorNote note : beatmap.colorNotes) {
-            beatPairs.add(new NoteBeatPair(note));
-        }
-        // Add all arcs
-        for (Arc arc : beatmap.sliders) {
-            beatPairs.add(new ArcBeatPair(arc));
-        }
-        // Add all chains
-        for (Chain chain : beatmap.burstSliders) {
-            beatPairs.add(new ChainBeatPair(chain));
-        }
-        // Add all bombs
-        for (Bomb bomb : beatmap.bombNotes) {
-            beatPairs.add(new BombBeatPair(bomb));
-        }
+        // Iterate through each color
+        for (int i = 0; i < 2; i++) {
+            // Isolate the beatmap objects corresponding to color i
+            List<ColorNote> colorNotes = colorSeparatedNotes.get(i);
+            List<Arc> arcs = colorSeparatedArcs.get(i);
+            List<Chain> chains = colorSeparatedChains.get(i);
 
-        // Sort the beat pairs by beat
-        beatPairs.sort((a, b) -> Float.compare(a.beat, b.beat));
+            // Group by beat
+            List<BeatGroup<ColorNote>> noteGroups = groupByBeat(colorNotes);
+            List<BeatGroup<Arc>> arcGroups = groupByBeat(arcs);
+            List<BeatGroup<Chain>> chainGroups = groupByBeat(chains);
+
+            // Combine all beat groups
+            List<BeatGroup<?>> beatGroups = new ArrayList<>();
+            beatGroups.addAll(noteGroups);
+            beatGroups.addAll(arcGroups);
+            beatGroups.addAll(chainGroups);
+            beatGroups.addAll(bombGroups);
+
+            // Sort by beat
+            beatGroups.sort(BeatGroup::compare);
+        }
 
         return null;
     }

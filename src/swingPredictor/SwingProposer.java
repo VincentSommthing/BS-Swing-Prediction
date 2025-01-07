@@ -20,7 +20,7 @@ public interface SwingProposer<T extends Swing> {
      * @param notes
      * @return list of proposed Swings
      */
-    default List<T> proposeNote(List<ColorNote> note) {
+    default List<T> proposeNote(List<ColorNote> notes, List<Bomb> bombs) {
         throw new UnsupportedOperationException("Need to implement proposeNote");
     };
 
@@ -34,9 +34,9 @@ public interface SwingProposer<T extends Swing> {
      */
     default List<T> proposeNote(
         List<ColorNote> prevNotes, float prevTime,
-        List<ColorNote> currNotes, float currTime)
+        List<ColorNote> currNotes, List<Bomb> currBombs, float currTime)
     {
-        return this.proposeNote(currNotes);
+        return this.proposeNote(currNotes, currBombs);
     }
 
     /**
@@ -51,10 +51,10 @@ public interface SwingProposer<T extends Swing> {
      */
     default List<T> proposeNote(
         List<ColorNote> prevNotes, float prevTime,
-        List<ColorNote> currNotes, float currTime,
+        List<ColorNote> currNotes, List<Bomb> currBombs, float currTime,
         List<ColorNote> nextNotes, float nextTime)
     {
-        return this.proposeNote(prevNotes, prevTime, currNotes, currTime);
+        return this.proposeNote(prevNotes, prevTime, currNotes, currBombs, currTime);
     }
 
     /**
@@ -62,7 +62,7 @@ public interface SwingProposer<T extends Swing> {
      * @param arc
      * @return list of proposed Swings
      */
-    List<T> proposeArc(Arc arc);
+    List<T> proposeArc(List<Arc> arcs);
 
     /**
      * Propose a list of Swings for a given chain
