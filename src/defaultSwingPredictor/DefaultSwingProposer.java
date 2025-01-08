@@ -12,29 +12,17 @@ import java.util.List;
  * Default swing proposer
  */
 public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
-
     @Override
-    public List<DefaultSwing> proposeNote(List<ColorNote> prevNotes, float prevTime, List<ColorNote> currNotes, List<Bomb> currBombs, float currTime) {
+    public List<DefaultSwing> propose(List<DefaultSwing> prevSwingsProposed,
+        List<ColorNote> notes,
+        List<Arc> arcHeads,
+        List<Arc> arcTails,
+        List<Chain> chains,
+        List<Bomb> bombs,
+        float startTime,
+        float endTime)
+    {
         // TODO
         return null;
     }
-
-    @Override
-    public List<DefaultSwing> proposeArc(List<Arc> arcs) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public List<DefaultSwing> proposeChain(Chain chain) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public List<DefaultSwing> proposeBombs(List<Bomb> bombs) {
-        // TODO
-        return null;
-    }
-    
 }

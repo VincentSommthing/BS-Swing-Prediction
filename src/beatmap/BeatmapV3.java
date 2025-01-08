@@ -32,7 +32,7 @@ public class BeatmapV3 {
     private static final int[] MIRROR_ANCHOR = {0, 2, 1};
 
     public static abstract class BeatObject {
-        public float b; // Head Beat
+        public double b; // Head Beat
     }
     public static abstract class PositionedObject extends BeatObject {
         public int x; // Line Index
@@ -51,7 +51,7 @@ public class BeatmapV3 {
         }
     }
     public static abstract class Slider extends ColorObject {
-        public float tb; // Tail Beat
+        public double tb; // Tail Beat
         public int tx; // Tail Line Index
         public int ty; // Tail Line Layer
         public void mirror() {
@@ -65,9 +65,9 @@ public class BeatmapV3 {
     }
     public static class Bomb extends PositionedObject {}
     public static class Arc extends Slider {
-        public float mu; // Head Control Point Length Multiplier
+        public double mu; // Head Control Point Length Multiplier
         public int tc; // Tail Cut Direction
-        public float tmu; // Tail Control Point Length Multiplier
+        public double tmu; // Tail Control Point Length Multiplier
         public int m; // Mid-Anchor Mode
         public void mirror() {
             super.mirror();
@@ -77,15 +77,15 @@ public class BeatmapV3 {
     }   
     public static class Chain extends Slider {
         public int sc; // Slice Count
-        public float s; // Squish Factor
+        public double s; // Squish Factor
     }
     public static class Obstacle extends PositionedObject{
-        public float d; // Duration
+        public double d; // Duration
         public int w; // Width
         public int h; // Height
     }
     public static class BpmEvent extends BeatObject{
-        public float m; // BPM
+        public double m; // BPM
     }
 
     public String version;
