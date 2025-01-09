@@ -9,8 +9,8 @@ import java.util.function.Function;
  */
 public class DefaultArcSwing extends DefaultSwing {
     Arc arc;
-    public DefaultArcSwing(float x, float y, float rotation, boolean isForehand, Arc arc) {
-        super(x, y, rotation, isForehand);
+    public DefaultArcSwing(double x, double y, double rotation, boolean isForehand, Arc arc, double t0, double t1) {
+        super(x, y, rotation, isForehand, t0, t1);
         this.arc = arc;
     }
 
@@ -18,10 +18,10 @@ public class DefaultArcSwing extends DefaultSwing {
      * Calculate cost of the swing by running arcSwingCost
      */
     @Override
-    public float cost(
-        Function<DefaultNoteSwing, Float> noteSwingCost,
-        Function<DefaultArcSwing, Float> arcSwingCost,
-        Function<DefaultBombSwing, Float> bombSwingCost) {
+    public double cost(
+        Function<DefaultNoteSwing, Double> noteSwingCost,
+        Function<DefaultArcSwing, Double> arcSwingCost,
+        Function<DefaultBombSwing, Double> bombSwingCost) {
 
         return arcSwingCost.apply(this);
     }

@@ -20,12 +20,12 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         List<Arc> arcTails,
         List<Chain> chains,
         List<Bomb> bombs,
-        double startTime,
-        double endTime)
+        double t0,
+        double t1)
     {
         // TODO
         List<DefaultSwing> proposedSwings = new ArrayList<>();
-        proposedSwings.add(new DefaultSwing(0, 0, 0, false));
+        proposedSwings.add(new DefaultSwing(0, 0, 0, false, t0, t1));
         return proposedSwings;
     }
 }

@@ -6,18 +6,18 @@ import java.util.function.Function;
  * Default swing for notes
  */
 public class DefaultNoteSwing extends DefaultSwing {
-    public DefaultNoteSwing(float x, float y, float rotation, boolean isForehand) {
-        super(x, y, rotation, isForehand);
+    public DefaultNoteSwing(double x, double y, double rotation, boolean isForehand, double t0, double t1) {
+        super(x, y, rotation, isForehand, t0, t1);
     }
 
     /**
      * Calculate cost of swing by running noteSwingCost
      */
     @Override
-    public float cost(
-        Function<DefaultNoteSwing, Float> noteSwingCost,
-        Function<DefaultArcSwing, Float> arcSwingCost,
-        Function<DefaultBombSwing, Float> bombSwingCost) {
+    public double cost(
+        Function<DefaultNoteSwing, Double> noteSwingCost,
+        Function<DefaultArcSwing, Double> arcSwingCost,
+        Function<DefaultBombSwing, Double> bombSwingCost) {
 
         return noteSwingCost.apply(this);
     }

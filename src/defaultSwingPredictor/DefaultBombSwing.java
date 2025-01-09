@@ -9,8 +9,8 @@ import java.util.function.Function;
  */
 public class DefaultBombSwing extends DefaultSwing {
     Bomb[] bombs;
-    public DefaultBombSwing(float x, float y, float rotation, boolean isForehand, Bomb[] bombs) {
-        super(x, y, rotation, isForehand);
+    public DefaultBombSwing(double x, double y, double rotation, boolean isForehand, Bomb[] bombs, double t0, double t1) {
+        super(x, y, rotation, isForehand, t0, t1);
         this.bombs = bombs;
     }
 
@@ -18,10 +18,10 @@ public class DefaultBombSwing extends DefaultSwing {
      * Calculate cost of swing by running bombSwingCost
      */
     @Override
-    public float cost(
-        Function<DefaultNoteSwing, Float> noteSwingCost,
-        Function<DefaultArcSwing, Float> arcSwingCost,
-        Function<DefaultBombSwing, Float> bombSwingCost) {
+    public double cost(
+        Function<DefaultNoteSwing, Double> noteSwingCost,
+        Function<DefaultArcSwing, Double> arcSwingCost,
+        Function<DefaultBombSwing, Double> bombSwingCost) {
 
         return bombSwingCost.apply(this);
     }
