@@ -6,9 +6,14 @@ import beatmap.BeatmapV3.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class Predictor<T extends Swing> {
+    // Margin for equality (in case of precision errors)
+    final private double EPS = 1e-5;
+
     /**
      * Represents two lists, one for each color
      */
@@ -101,13 +106,20 @@ public class Predictor<T extends Swing> {
     /**
      * A group of objects that occur at the same beat
      */
-    private class BeatGroup<S> extends BeatPair<List<S>> {
+    private class BeatGroup<S> extends BeatPair<List<S>> implements Iterable<S> {
         public BeatGroup(double beat) {
             this.beat = beat;
             this.obj = new ArrayList<>();
         }
         public void add(S item) {
             this.obj.add(item);
+        }
+        public Stream<S> stream() {
+            return obj.stream();
+        }
+        @Override
+        public Iterator<S> iterator() {
+            return obj.iterator();
         }
     }
     /**
@@ -116,20 +128,20 @@ public class Predictor<T extends Swing> {
      * @param beatPairs List of beat pairs to group
      * @return List of beat groups
      */
-    private <S, U extends BeatPair<S>> List<BeatGroup<S>> groupByBeat(List<U> beatPairs) {
+    private List<BeatGroup<?>> groupByBeat(List<BeatPair<?>> beatPairs) {
         // Initialize list of groups
-        List<BeatGroup<S>> groups = new ArrayList<>();
+        List<BeatGroup<?>> groups = new ArrayList<>();
 
         if (!beatPairs.isEmpty()) {
             // sort the beat pairs by beat
             beatPairs.sort(BeatPair::compare);
 
             // create a group for the first beat object
-            BeatGroup<S> currentGroup = new BeatGroup<>(beatPairs.get(0).beat);
+            BeatGroup<Object> currentGroup = new BeatGroup<>(beatPairs.get(0).beat);
             // iterate through all beat pairs
-            for (BeatPair<S> beatPair: beatPairs) {
+            for (BeatPair<?> beatPair: beatPairs) {
                 // if beat does not match the current group, add the current group to the list and create a new group
-                if (currentGroup.beat != beatPair.beat) {
+                if (beatPair.beat > currentGroup.beat + EPS) {
                     groups.add(currentGroup);
                     currentGroup = new BeatGroup<>(beatPair.beat);
                 }
@@ -165,19 +177,15 @@ public class Predictor<T extends Swing> {
      */
     public List<T> predict(BeatmapV3 beatmap, double bpm) {
         // TODO Implement predict
-        final double SECONDSPERMINUTE = 60.0;
-        final double EPS = 1e-5;
+        final double SECONDSPERMINUTE = 60.0; // Seconds per minute
 
         // Separate colorNotes, arcs, chains by color
         ColorSeparatedPair<List<ColorNote>> colorSeparatedNotes = separateByColor(beatmap.colorNotes);
         ColorSeparatedPair<List<Arc>> colorSeparatedArcs = separateByColor(beatmap.sliders);
         ColorSeparatedPair<List<Chain>> colorSeparatedChains = separateByColor(beatmap.burstSliders);
 
-        // Group bombs by beat
+        // Group turn bombs and bpm into beat pairs
         List<BeatPair<Bomb>> beatPairBombs = toBeatPairs(beatmap.bombNotes);
-        List<BeatGroup<Bomb>> bombGroups = groupByBeat(beatPairBombs);
-
-        // Turn BPM changes into beat pairs
         List<BeatPair<BpmEvent>> beatPairBpms = toBeatPairs(beatmap.bpmEvents);
 
         // Iterate through each color
@@ -194,19 +202,21 @@ public class Predictor<T extends Swing> {
             List<BeatPair<Arc>> beatPairArcTails = toBeatPairs(arcs, BeatPairTail::new);
 
             // Group by beat
-            List<BeatGroup<ColorNote>> noteGroups = groupByBeat(beatPairNotes);
-            List<BeatGroup<Arc>> arcHeadGroups = groupByBeat(beatPairArcHeads);
-            List<BeatGroup<Chain>> chainGroups = groupByBeat(beatPairChains);
-            List<BeatGroup<Arc>> arcTailGroups = groupByBeat(beatPairArcTails);
+            // List<BeatGroup<ColorNote>> noteGroups = groupByBeat(beatPairNotes);
+            // List<BeatGroup<Arc>> arcHeadGroups = groupByBeat(beatPairArcHeads);
+            // List<BeatGroup<Chain>> chainGroups = groupByBeat(beatPairChains);
+            // List<BeatGroup<Arc>> arcTailGroups = groupByBeat(beatPairArcTails);
 
             // Combine all beat groups
             List<BeatPair<?>> beatPairs = new ArrayList<>();
-            beatPairs.addAll(noteGroups);
-            beatPairs.addAll(arcHeadGroups);
-            beatPairs.addAll(arcTailGroups);
-            beatPairs.addAll(chainGroups);
-            beatPairs.addAll(bombGroups);
+            beatPairs.addAll(beatPairNotes);
+            beatPairs.addAll(beatPairArcHeads);
+            beatPairs.addAll(beatPairChains);
+            beatPairs.addAll(beatPairArcTails);
+            beatPairs.addAll(beatPairBombs);
             beatPairs.addAll(beatPairBpms);
+
+            List<BeatGroup<?>> beatGroups = groupByBeat(beatPairs);
 
             // Sort
             beatPairs.sort(BeatGroup::compare);
@@ -214,30 +224,79 @@ public class Predictor<T extends Swing> {
             boolean containsNotes = false;
             double beat = 0.0;
             double time = 0.0;
-            double currentStartTime = 0.0;
-            double currentEndTime = 0.0;
+            double currStartTime = 0.0;
+            double currEndBeat = 0.0;
             List<List<T>> proposedSwings = new ArrayList<>();
+
+            List<ColorNote> currNotes = new ArrayList<>();
+            List<Arc> currArcHeads = new ArrayList<>();
+            List<Arc> currArcTails = new ArrayList<>();
+            List<Chain> currChains = new ArrayList<>();
+            List<Bomb> currBombs = new ArrayList<>();
+            boolean containsObjects = false;
+            boolean onlyBombs = true;
             // Group by beat
-            for (BeatPair<?> beatPair : beatPairs) {
+            for (BeatGroup<?> beatGroup : beatGroups) {
                 // calculate time of beatGroup
-                double dbeat = beatPair.beat - beat;
+                double dbeat = beatGroup.beat - beat;
                 double dt = dbeat / bpm * SECONDSPERMINUTE;
 
-                beat = beatPair.beat;
+                beat = beatGroup.beat;
                 time += dt;
+
+                // prose swings if these conditions are met
+                if (containsObjects // current lists contain objects
+                    && (beatGroup.stream().anyMatch(a -> a instanceof ColorNote || a instanceof Chain) // current beatGroup containts note or chain
+                    || (onlyBombs && time > currStartTime + bombWindowSize + EPS) // outside bomb window
+                    || (!onlyBombs && beat > currEndBeat + EPS)) // outside current end beat
+                ) {
+                    List<T> prevSwings = null;
+                    if (!proposedSwings.isEmpty()) {
+                        prevSwings = proposedSwings.getLast();
+                    }
+                    proposedSwings.add(proposer.propose(
+                        prevSwings,
+                        currNotes,
+                        currArcHeads,
+                        currArcTails,
+                        currChains,
+                        currBombs,
+                        currStartTime,
+                        time - (beat - currEndBeat) / bpm * SECONDSPERMINUTE));
+
+                    currNotes = new ArrayList<>();
+                    currArcHeads = new ArrayList<>();
+                    currArcTails = new ArrayList<>();
+                    currChains = new ArrayList<>();
+                    currBombs = new ArrayList<>();
+                }
                 
-                if (beatPair.obj instanceof BpmEvent bpmEvent) {
-                    // If the object is a bpm event, change the bpm
-                    bpm = bpmEvent.m;
-                } else {
-                    if (containsNotes) {
-                        if (time <= currentEndTime + EPS) {
-                            
+                // Iterate through beat grup and add everything
+                for (Object obj : beatGroup) {
+                    if (obj instanceof BpmEvent bpmEvent) {
+                        // If the object is a bpm event, change the bpm
+                        bpm = bpmEvent.m;
+                    } else if (obj instanceof ColorNote note) {
+                        currNotes.add(note);
+                    } else if (obj instanceof Arc arc) {
+                        if (arc.tb <= currEndBeat) {
+                            currArcTails.add(arc);
+                        } else {
+                            currArcHeads.add(arc);
                         }
+                    } else if (obj instanceof Chain chain) {
+                        currChains.add(chain);
+                        currEndBeat = Math.max(currEndBeat, chain.tb);
+                    } else if (obj instanceof Bomb bomb) {
+                        currBombs.add(bomb);
                     }
                 }
+                containsObjects = true;
             }
+
+            System.out.println(proposedSwings);
         }
+
 
         return null;
     }

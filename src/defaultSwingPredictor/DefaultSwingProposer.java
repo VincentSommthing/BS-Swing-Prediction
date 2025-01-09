@@ -7,6 +7,7 @@ import beatmap.BeatmapV3.ColorNote;
 import swingPredictor.SwingProposer;
 
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Default swing proposer
@@ -19,10 +20,12 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         List<Arc> arcTails,
         List<Chain> chains,
         List<Bomb> bombs,
-        float startTime,
-        float endTime)
+        double startTime,
+        double endTime)
     {
         // TODO
-        return null;
+        List<DefaultSwing> proposedSwings = new ArrayList<>();
+        proposedSwings.add(new DefaultSwing(0, 0, 0, false));
+        return proposedSwings;
     }
 }

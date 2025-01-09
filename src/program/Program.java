@@ -30,7 +30,6 @@ public class Program {
 
         Predictor<DefaultSwing> predictor = new Predictor<DefaultSwing>(proposer, costFn);
         List<DefaultSwing> swings = predictor.predict(beatmap, 181.0);
-        System.out.println(swings);
     }
 
     /**

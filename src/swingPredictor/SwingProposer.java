@@ -6,8 +6,6 @@ import beatmap.BeatmapV3.Chain;
 import beatmap.BeatmapV3.Bomb;
 
 import java.util.List;
-import java.util.Collections;
-
 
 /**
  * Proposes sets of swings
@@ -32,6 +30,6 @@ public interface SwingProposer<T extends Swing> {
         List<Arc> arcTails,
         List<Chain> chains,
         List<Bomb> bombs,
-        float startTime,
-        float endTime);
+        double startTime,
+        double endTime);
 }
