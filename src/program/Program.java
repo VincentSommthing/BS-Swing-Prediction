@@ -23,13 +23,14 @@ public class Program {
     public static void main(String[] args) {
         // String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
         String testV3 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/387a0 /ExpertPlusStandard.dat";
+        double bpmV3 = 181.0;
         BeatmapV3 beatmap = getBeatmapFromPath(testV3);
 
         DefaultCostFn costFn = new DefaultCostFn();
         DefaultSwingProposer proposer = new DefaultSwingProposer();
 
         Predictor<DefaultSwing> predictor = new Predictor<DefaultSwing>(proposer, costFn);
-        List<DefaultSwing> swings = predictor.predict(beatmap, 181.0);
+        List<DefaultSwing> swings = predictor.predict(beatmap, bpmV3);
     }
 
     /**

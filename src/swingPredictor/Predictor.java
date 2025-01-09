@@ -221,19 +221,18 @@ public class Predictor<T extends Swing> {
             // Sort
             beatPairs.sort(BeatGroup::compare);
 
-            boolean containsNotes = false;
             double beat = 0.0;
             double time = 0.0;
             double currStartTime = 0.0;
             double currEndBeat = 0.0;
             List<List<T>> proposedSwings = new ArrayList<>();
 
-            List<ColorNote> currNotes = new ArrayList<>();
-            List<Arc> currArcHeads = new ArrayList<>();
-            List<Arc> currArcTails = new ArrayList<>();
-            List<Chain> currChains = new ArrayList<>();
-            List<Bomb> currBombs = new ArrayList<>();
-            boolean containsObjects = false;
+            List<ColorNote> currNotes = null;
+            List<Arc> currArcHeads = null;
+            List<Arc> currArcTails = null;
+            List<Chain> currChains = null;
+            List<Bomb> currBombs = null;
+            boolean requiresInit = true;
             boolean onlyBombs = true;
             // Group by beat
             for (BeatGroup<?> beatGroup : beatGroups) {
@@ -245,7 +244,7 @@ public class Predictor<T extends Swing> {
                 time += dt;
 
                 // prose swings if these conditions are met
-                if (containsObjects // current lists contain objects
+                if (!requiresInit // everything is already initialized
                     && (beatGroup.stream().anyMatch(a -> a instanceof ColorNote || a instanceof Chain) // current beatGroup containts note or chain
                     || (onlyBombs && time > currStartTime + bombWindowSize + EPS) // outside bomb window
                     || (!onlyBombs && beat > currEndBeat + EPS)) // outside current end beat
@@ -254,6 +253,7 @@ public class Predictor<T extends Swing> {
                     if (!proposedSwings.isEmpty()) {
                         prevSwings = proposedSwings.getLast();
                     }
+                    // Propose swings
                     proposedSwings.add(proposer.propose(
                         prevSwings,
                         currNotes,
@@ -264,11 +264,20 @@ public class Predictor<T extends Swing> {
                         currStartTime,
                         time - (beat - currEndBeat) / bpm * SECONDSPERMINUTE));
 
+                    // require initialization for next set of beat objects
+                    requiresInit = true;
+                }
+
+                if (requiresInit) {
                     currNotes = new ArrayList<>();
                     currArcHeads = new ArrayList<>();
                     currArcTails = new ArrayList<>();
                     currChains = new ArrayList<>();
                     currBombs = new ArrayList<>();
+                    currStartTime = time;
+                    currEndBeat = beat;
+                    requiresInit = false;
+                    onlyBombs = true;
                 }
                 
                 // Iterate through beat grup and add everything
@@ -278,20 +287,22 @@ public class Predictor<T extends Swing> {
                         bpm = bpmEvent.m;
                     } else if (obj instanceof ColorNote note) {
                         currNotes.add(note);
+                        onlyBombs = false;
                     } else if (obj instanceof Arc arc) {
                         if (arc.tb <= currEndBeat) {
                             currArcTails.add(arc);
                         } else {
                             currArcHeads.add(arc);
                         }
+                        onlyBombs = false;
                     } else if (obj instanceof Chain chain) {
                         currChains.add(chain);
                         currEndBeat = Math.max(currEndBeat, chain.tb);
+                        onlyBombs = false;
                     } else if (obj instanceof Bomb bomb) {
                         currBombs.add(bomb);
                     }
                 }
-                containsObjects = true;
             }
 
             System.out.println(proposedSwings);

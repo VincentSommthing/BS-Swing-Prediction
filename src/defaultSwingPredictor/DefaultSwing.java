@@ -42,4 +42,10 @@ public class DefaultSwing implements Swing {
     public void mirror() {
         this.x = 3 - x;
     }
+
+    @Override
+    public String toString() {
+        // return String.valueOf(this.t0) + " " + String.valueOf(this.t1);
+        return String.valueOf(this.t1 - this.t0);
+    }
 }
