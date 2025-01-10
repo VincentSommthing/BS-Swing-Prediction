@@ -1,18 +1,123 @@
 package defaultSwingPredictor;
 
-import beatmap.BeatmapV3.Arc;
-import beatmap.BeatmapV3.Bomb;
-import beatmap.BeatmapV3.Chain;
-import beatmap.BeatmapV3.ColorNote;
+import beatmap.BeatmapV3.*;
 import swingPredictor.SwingProposer;
+import utils.Vec;
+import utils.VecPair;
+import utils.Constants;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Default swing proposer
  */
 public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
+    private final double[] DIRTOROT = Constants.DIRTOROT;
+    private final Vec[] DIRTOVEC = Constants.DIRTOVEC;
+
+    /**
+     * Gets the angle of a note, taking into account precision rotation
+     * @param obj
+     * @return
+     */
+    private double getRot(ColorObject obj) {
+        if (obj instanceof ColorNote note) {
+            return DIRTOROT[note.d] + note.a * Math.PI / 180.0;
+        }
+        return DIRTOROT[obj.d];
+    }
+
+    /**
+     * Gets a unit vector pointing in the direction a given note points at
+     * @param obj
+     * @return
+     */
+    private Vec getRotVec(ColorObject obj) {
+        if (obj.d == 8) {
+            return new Vec(0.0, 0.0);
+        }
+        return Vec.fromRot(getRot(obj));
+    }
+    /**
+     * Gets the position of a note as a vector
+     * @param obj
+     * @return
+     */
+    private Vec getPosVec(PositionedObject obj) {
+        return new Vec(obj.x, obj.y);
+    }
+
+    /**
+     * Bezier interpolation
+     * @param p0
+     * @param p1
+     * @param p2
+     * @param t
+     * @return
+     */
+    private Vec bezier(Vec p0, Vec p1, Vec p2, double t) {
+        double a0 = Math.pow((1 - t), 2);
+        double a1 = 2 * (1 - t) * t;
+        double a2 = t * t;
+        return new Vec(
+            a0 * p0.x + a1 * p1.x + a2 * p2.x,
+            a0 * p0.y + a1 * p1.y + a2 * p2.y
+        );
+    }
+
+    /**
+     * Derivative of bezier
+     * @param p0
+     * @param p1
+     * @param p2
+     * @param t
+     * @return
+     */
+    private Vec dBezier(Vec p0, Vec p1, Vec p2, double t) {
+        double a0 = 2 * (1 - t);
+        double a1 = 2 * t;
+        return new Vec(
+            a0 * (p0.x - p1.x) + a1 * (p2.x - p1.x),
+            a0 * (p0.y - p1.y) + a1 * (p2.y - p1.y)
+        );
+    }
+
+    /**
+     * Gets a pos + rot vector pair representing the end swing given a chain
+     * @param chains
+     * @return
+     */
+    private VecPair getSwingEnd(List<Chain> chains) {
+        if (chains.isEmpty()) {
+            return null;
+        }
+
+        // Only take the first Chain
+        // TODO: case of multiple chains
+        Chain chain = chains.getFirst();
+
+        Vec p0 = getPosVec(chain);
+        Vec p2 = new Vec(chain.tx, chain.ty);
+        // check if head is pointing directly to tail
+        Vec headRotVec = getRotVec(chain);
+        Vec diff = p2 .sub (p0);
+        diff.normalize();
+        double pDist = 0.0;
+        // If head is not pointing toward tail, set pDist to half of |diff|
+        if (!diff.equals(headRotVec)) {
+            pDist = diff.mag() / 2;
+        }
+        Vec p1 = p0 .add (p2 .mul (pDist));
+
+        Vec resultPos = bezier(p0, p1, p2, chain.s);
+        Vec resultRotVec = dBezier(p0, p1, p2, chain.s);
+        System.out.println(resultPos);
+        return new VecPair(resultPos, resultRotVec.toRot());
+    }
+
     @Override
     public List<DefaultSwing> propose(List<DefaultSwing> prevSwingsProposed,
         List<ColorNote> notes,
@@ -24,8 +129,54 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         double t1)
     {
         // TODO
-        List<DefaultSwing> proposedSwings = new ArrayList<>();
-        proposedSwings.add(new DefaultSwing(0, 0, 0, false, t0, t1));
-        return proposedSwings;
+
+        // Check if there is anything to hit
+        if (!notes.isEmpty() || !chains.isEmpty()) {
+            // Try to get leaving info from chains
+            VecPair leavingInfo = getSwingEnd(chains);
+
+            VecPair enterInfo = null;
+
+            // Find the total cut vector
+            Vec totalCutVec = new Vec(0.0, 0.0);
+            for (ColorNote note: notes) {
+                totalCutVec.addBy(getRotVec(note));
+            }
+
+            if (totalCutVec.is0()) {
+                // If the total cut vector is 0
+            } else {
+                // If total cut vector is nonzero
+                // determine cut order of all the notes.
+                totalCutVec.normalize();
+
+                // First find dot product of note positions and totalCutVec
+                Map<ColorNote, Double> noteOrder = new HashMap<>();
+                for (ColorNote note: notes) {
+                    noteOrder.put(note, totalCutVec.dot(getPosVec(note)));
+                }
+
+                // Sort by the dot product
+                notes.sort((a, b) -> Double.compare(noteOrder.get(a), noteOrder.get(b)));
+
+                // Take the first and last notes to determine the path of the swing
+                // TODO: situation where there are multiple notes with the same dot product
+                Vec startNotePos = getPosVec(notes.getFirst());
+                Vec endNotePos = getPosVec(notes.getLast());
+                Vec diff = endNotePos .sub (startNotePos);
+                
+                if (!diff.is0()) {
+                    diff.normalize();
+                    totalCutVec = diff;
+                }
+                enterInfo = new VecPair(startNotePos, totalCutVec);
+                if (leavingInfo != null) {
+                    leavingInfo = new VecPair(endNotePos, totalCutVec);
+                }
+            }
+
+        }
+
+        return null;
     }
 }

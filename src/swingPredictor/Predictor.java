@@ -2,6 +2,7 @@ package swingPredictor;
 
 import beatmap.BeatmapV3;
 import beatmap.BeatmapV3.*;
+import utils.Constants;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.stream.Stream;
 
 public class Predictor<T extends Swing> {
     // Margin for equality (in case of precision errors)
-    final private double EPS = 1e-5;
+    final private double EPS = Constants.EPS;
 
     /**
      * Represents two lists, one for each color
@@ -201,12 +202,6 @@ public class Predictor<T extends Swing> {
             List<BeatPair<Chain>> beatPairChains = toBeatPairs(chains);
             List<BeatPair<Arc>> beatPairArcTails = toBeatPairs(arcs, BeatPairTail::new);
 
-            // Group by beat
-            // List<BeatGroup<ColorNote>> noteGroups = groupByBeat(beatPairNotes);
-            // List<BeatGroup<Arc>> arcHeadGroups = groupByBeat(beatPairArcHeads);
-            // List<BeatGroup<Chain>> chainGroups = groupByBeat(beatPairChains);
-            // List<BeatGroup<Arc>> arcTailGroups = groupByBeat(beatPairArcTails);
-
             // Combine all beat groups
             List<BeatPair<?>> beatPairs = new ArrayList<>();
             beatPairs.addAll(beatPairNotes);
@@ -221,10 +216,6 @@ public class Predictor<T extends Swing> {
             // Sort
             beatPairs.sort(BeatGroup::compare);
 
-            double beat = 0.0;
-            double time = 0.0;
-            double currStartTime = 0.0;
-            double currEndBeat = 0.0;
             List<List<T>> proposedSwings = new ArrayList<>();
 
             List<ColorNote> currNotes = null;
@@ -234,6 +225,11 @@ public class Predictor<T extends Swing> {
             List<Bomb> currBombs = null;
             boolean requiresInit = true;
             boolean onlyBombs = true;
+            double beat = 0.0;
+            double time = 0.0;
+            double currStartTime = 0.0;
+            double currEndBeat = 0.0;
+
             // Group by beat
             for (BeatGroup<?> beatGroup : beatGroups) {
                 // calculate time of beatGroup
@@ -268,6 +264,7 @@ public class Predictor<T extends Swing> {
                     requiresInit = true;
                 }
 
+                // Initialize if required
                 if (requiresInit) {
                     currNotes = new ArrayList<>();
                     currArcHeads = new ArrayList<>();
@@ -285,27 +282,31 @@ public class Predictor<T extends Swing> {
                     if (obj instanceof BpmEvent bpmEvent) {
                         // If the object is a bpm event, change the bpm
                         bpm = bpmEvent.m;
+
                     } else if (obj instanceof ColorNote note) {
                         currNotes.add(note);
                         onlyBombs = false;
+
                     } else if (obj instanceof Arc arc) {
-                        if (arc.tb <= currEndBeat) {
+                        if (arc.tb <= currEndBeat + EPS) {
                             currArcTails.add(arc);
                         } else {
                             currArcHeads.add(arc);
                         }
                         onlyBombs = false;
+
                     } else if (obj instanceof Chain chain) {
                         currChains.add(chain);
                         currEndBeat = Math.max(currEndBeat, chain.tb);
                         onlyBombs = false;
+
                     } else if (obj instanceof Bomb bomb) {
                         currBombs.add(bomb);
                     }
                 }
-            }
+                currEndBeat = Math.max(currEndBeat, beat);
 
-            System.out.println(proposedSwings);
+            }
         }
 
 

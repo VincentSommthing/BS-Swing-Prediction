@@ -8,17 +8,23 @@ import java.util.function.Function;
  * Default swing interface
  */
 public class DefaultSwing implements Swing {
-    public double x;
-    public double y;
-    public double rotation;
+    public double x0;
+    public double y0;
+    public double x1;
+    public double y1;
+    public double rot0;
+    public double rot1;
     public boolean isForehand;
     public double t0; // Start time
     public double t1; // End time
 
-    public DefaultSwing(double x, double y, double rotation, boolean isForehand, double t0, double t1) {
-        this.x = x;
-        this.y = y;
-        this.rotation = rotation;
+    public DefaultSwing(double x0, double y0, double x1, double y1, double rot0, double rot1, boolean isForehand, double t0, double t1) {
+        this.x0 = x0;
+        this.y0 = y0;
+        this.y1 = y1;
+        this.y1 = y1;
+        this.rot0 = rot0;
+        this.rot1 = rot1;
         this.isForehand = isForehand;
         this.t0 = t0;
         this.t1 = t1;
@@ -40,7 +46,8 @@ public class DefaultSwing implements Swing {
     }
 
     public void mirror() {
-        this.x = 3 - x;
+        this.x0 = 3 - x0;
+        this.x1 = 3 - x1;
     }
 
     @Override

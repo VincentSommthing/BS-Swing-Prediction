@@ -7,7 +7,6 @@ import beatmap.BeatmapV3;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-// import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import defaultSwingPredictor.*;
 import swingPredictor.Predictor;
@@ -21,9 +20,12 @@ public class Program {
     private static final Set<String> V2_6VERSIONS = Set.of("2.6.0");
     private static final Set<String> V3VERSIONS = Set.of("3.0.0", "3.1.0", "3.2.0", "3.3.0");
     public static void main(String[] args) {
-        // String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
+        String testV2 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/26d33/EasyStandard.dat";
         String testV3 = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/387a0 /ExpertPlusStandard.dat";
         double bpmV3 = 181.0;
+        String testV3Bomb = "/Users/gamer/Desktop/Real Gaming/Program/beat saber map generation/3d86c/ExpertPlusStandard.dat";
+        double bpmV3Bomb = 125.5;
+
         BeatmapV3 beatmap = getBeatmapFromPath(testV3);
 
         DefaultCostFn costFn = new DefaultCostFn();

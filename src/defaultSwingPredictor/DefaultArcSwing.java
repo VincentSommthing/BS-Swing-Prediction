@@ -8,10 +8,8 @@ import java.util.function.Function;
  * Default swing for arcs
  */
 public class DefaultArcSwing extends DefaultSwing {
-    Arc arc;
-    public DefaultArcSwing(double x, double y, double rotation, boolean isForehand, Arc arc, double t0, double t1) {
-        super(x, y, rotation, isForehand, t0, t1);
-        this.arc = arc;
+    public DefaultArcSwing(double x, double y, double rot, boolean isForehand, Arc arc, double t0, double t1) {
+        super(x, y, x, y, rot, rot, isForehand, t0, t1);
     }
 
     /**

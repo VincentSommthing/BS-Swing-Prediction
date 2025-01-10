@@ -9,8 +9,8 @@ import java.util.function.Function;
  */
 public class DefaultBombSwing extends DefaultSwing {
     Bomb[] bombs;
-    public DefaultBombSwing(double x, double y, double rotation, boolean isForehand, Bomb[] bombs, double t0, double t1) {
-        super(x, y, rotation, isForehand, t0, t1);
+    public DefaultBombSwing(double x, double y, double rot, boolean isForehand, Bomb[] bombs, double t0, double t1) {
+        super(x, y, x, y, rot, rot, isForehand, t0, t1);
         this.bombs = bombs;
     }
 
