@@ -1,13 +1,15 @@
 package defaultSwingPredictor;
 
+import utils.VecPair;
+
 import java.util.function.Function;
 
 /**
  * Default swing for notes
  */
 public class DefaultNoteSwing extends DefaultSwing {
-    public DefaultNoteSwing(double x0, double y0, double x1, double y1, double rot0, double rot1, boolean isForehand, double t0, double t1) {
-        super(x0, y0, x1, y1, rot0, rot1, isForehand, t0, t1);
+    public DefaultNoteSwing(VecPair start, VecPair end, boolean isForehand, double t0, double t1) {
+        super(start, end, isForehand, t0, t1);
     }
 
     /**

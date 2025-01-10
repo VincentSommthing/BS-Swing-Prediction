@@ -32,4 +32,18 @@ public class VecPair {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        String posString = "p: (" + this.p.x + ", " + this.p.y + ")  ";
+        String vString = "";
+        String rotString = "";
+        if (v != null) {
+            vString = "v: (" + this.v.x + ", " + this.v.y + ")";
+        }
+        if (!Double.isInfinite(rot)) {
+            rotString = "r: " + this.rot;
+        }
+        return "VecPair(" + posString + vString + rotString + ")";
+    }
 }

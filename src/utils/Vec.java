@@ -12,8 +12,8 @@ public class Vec {
         this.y = y;
     }
 
-    public static Vec fromRot(double dir) {
-        return new Vec(Math.cos(dir - Math.PI / 2), Math.sin(dir - Math.PI / 2));
+    public static Vec fromRot(double rot) {
+        return new Vec(Math.cos(rot - Math.PI / 2), Math.sin(rot - Math.PI / 2));
     }
     public double toRot() {
         return Math.atan2(y, x) + Math.PI / 2;

@@ -114,8 +114,48 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
 
         Vec resultPos = bezier(p0, p1, p2, chain.s);
         Vec resultRotVec = dBezier(p0, p1, p2, chain.s);
-        System.out.println(resultPos);
+
         return new VecPair(resultPos, resultRotVec.toRot());
+    }
+
+    /**
+     * Returns a vague swing given a list of notes and proposed swing rot vector
+     * @param notes
+     * @param swingRotVec
+     * @return
+     */
+    private VagueSwing getSwing(List<ColorNote> notes, Vec swingRotVec) {
+        VecPair swingEnterInfo = null;
+        VecPair swingExitInfo = null;
+        // If it is nonzero, use it to determine leaving and entering info (if needed)
+        if (!swingRotVec.is0()) {
+            // If total cut vector is nonzero
+            // determine cut order of all the notes.
+            swingRotVec.normalize();
+
+            // First find dot product of note positions and swingRotVec
+            Map<ColorNote, Double> noteOrder = new HashMap<>();
+            for (ColorNote note: notes) {
+                noteOrder.put(note, swingRotVec.dot(getPosVec(note)));
+            }
+
+            // Sort by the dot product
+            notes.sort((a, b) -> Double.compare(noteOrder.get(a), noteOrder.get(b)));
+
+            // Take the first and last notes to determine the path of the swing
+            // TODO: situation where there are multiple notes with the same dot product
+            Vec startNotePos = getPosVec(notes.getFirst());
+            Vec endNotePos = getPosVec(notes.getLast());
+            Vec diff = endNotePos .sub (startNotePos);
+            
+            if (!diff.is0()) {
+                diff.normalize();
+                swingRotVec = diff;
+            }
+            swingEnterInfo = new VecPair(startNotePos, swingRotVec);
+            swingExitInfo = new VecPair(endNotePos, swingRotVec);
+        }
+        return new VagueSwing(swingEnterInfo, swingExitInfo);
     }
 
     @Override
@@ -132,49 +172,24 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
 
         // Check if there is anything to hit
         if (!notes.isEmpty() || !chains.isEmpty()) {
-            // Try to get leaving info from chains
-            VecPair leavingInfo = getSwingEnd(chains);
-
-            VecPair enterInfo = null;
-
             // Find the total cut vector
             Vec totalCutVec = new Vec(0.0, 0.0);
             for (ColorNote note: notes) {
                 totalCutVec.addBy(getRotVec(note));
             }
+            // Try using totalCutVec to determine swing enter and exit info
+            VagueSwing proposedSwing = getSwing(notes, totalCutVec);
 
-            if (totalCutVec.is0()) {
-                // If the total cut vector is 0
-            } else {
-                // If total cut vector is nonzero
-                // determine cut order of all the notes.
-                totalCutVec.normalize();
-
-                // First find dot product of note positions and totalCutVec
-                Map<ColorNote, Double> noteOrder = new HashMap<>();
-                for (ColorNote note: notes) {
-                    noteOrder.put(note, totalCutVec.dot(getPosVec(note)));
-                }
-
-                // Sort by the dot product
-                notes.sort((a, b) -> Double.compare(noteOrder.get(a), noteOrder.get(b)));
-
-                // Take the first and last notes to determine the path of the swing
-                // TODO: situation where there are multiple notes with the same dot product
-                Vec startNotePos = getPosVec(notes.getFirst());
-                Vec endNotePos = getPosVec(notes.getLast());
-                Vec diff = endNotePos .sub (startNotePos);
-                
-                if (!diff.is0()) {
-                    diff.normalize();
-                    totalCutVec = diff;
-                }
-                enterInfo = new VecPair(startNotePos, totalCutVec);
-                if (leavingInfo != null) {
-                    leavingInfo = new VecPair(endNotePos, totalCutVec);
+            if (!chains.isEmpty()) {
+                // If there is a chain, use that to get exit info instead
+                proposedSwing.exitInfo = getSwingEnd(chains);
+                // Use the chain to calculated enter info if needed
+                if (proposedSwing.enterInfo == null) {
+                    Chain chain = chains.getFirst();
+                    Vec v = getRotVec(chain);
+                    proposedSwing.enterInfo = getSwing(notes, v).enterInfo;
                 }
             }
-
         }
 
         return null;

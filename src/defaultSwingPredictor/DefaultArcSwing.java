@@ -1,6 +1,7 @@
 package defaultSwingPredictor;
 
 import beatmap.BeatmapV3.Arc;
+import utils.VecPair;
 
 import java.util.function.Function;
 
@@ -8,8 +9,8 @@ import java.util.function.Function;
  * Default swing for arcs
  */
 public class DefaultArcSwing extends DefaultSwing {
-    public DefaultArcSwing(double x, double y, double rot, boolean isForehand, Arc arc, double t0, double t1) {
-        super(x, y, x, y, rot, rot, isForehand, t0, t1);
+    public DefaultArcSwing(VecPair vecPair, boolean isForehand, Arc arc, double t0, double t1) {
+        super(vecPair, vecPair, isForehand, t0, t1);
     }
 
     /**
