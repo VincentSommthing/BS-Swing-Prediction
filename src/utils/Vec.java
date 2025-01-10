@@ -46,12 +46,16 @@ public class Vec {
 
     public void normalize() {
         double l = mag();
-        x /= l;
-        y /= l;
+        divBy(l);
     }
 
     public Vec mul(double t) {
         return new Vec(x * t, y * t);
+    }
+
+    public void divBy(double t) {
+        x /= t;
+        y /= t;
     }
 
     @Override

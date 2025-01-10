@@ -5,6 +5,9 @@ import swingPredictor.SwingProposer;
 import utils.Vec;
 import utils.VecPair;
 import utils.Constants;
+import utils.Mat;
+import utils.LinAlg;
+import utils.LinAlg.*;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -17,6 +20,8 @@ import java.util.Map;
 public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
     private final double[] DIRTOROT = Constants.DIRTOROT;
     private final Vec[] DIRTOVEC = Constants.DIRTOVEC;
+    
+    private final double DOTRATIOTHRESHOLD = 0.5;
 
     /**
      * Gets the angle of a note, taking into account precision rotation
@@ -174,9 +179,8 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         if (!notes.isEmpty() || !chains.isEmpty()) {
             // Find the total cut vector
             Vec totalCutVec = new Vec(0.0, 0.0);
-            for (ColorNote note: notes) {
-                totalCutVec.addBy(getRotVec(note));
-            }
+            notes.forEach(note -> totalCutVec.addBy(getRotVec(note)));
+
             // Try using totalCutVec to determine swing enter and exit info
             VagueSwing proposedSwing = getSwing(notes, totalCutVec);
 
@@ -190,6 +194,30 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
                     proposedSwing.enterInfo = getSwing(notes, v).enterInfo;
                 }
             }
+
+            List<VagueSwing> proposedSwings = new ArrayList<>();
+            // If the proposed swing is valid, add it to the list of proposed swings
+            if (proposedSwing.enterInfo != null && proposedSwing.exitInfo != null) {
+                 proposedSwings.add(proposedSwing);
+            }
+
+            // If there is still no enter info and there are multiple notes
+            if (proposedSwings.isEmpty() && notes.size() > 1) {
+                // Do PCA on the notes, using the difference between the first and last as the initial guess
+                Vec p1 = getPosVec(notes.getFirst());
+                Vec p2 = getPosVec(notes.getLast());
+                Vec guess = p2 .sub (p1);
+                List<Vec> notePositions = notes.stream().map(this::getPosVec).toList();
+                PCAInfo pcaInfo = LinAlg.pca(notePositions, guess);
+                
+                double ratio = pcaInfo.values[1] / pcaInfo.values[0];
+                if (ratio < DOTRATIOTHRESHOLD) {
+                    proposedSwing = getSwing(notes, pcaInfo.pcs[0]);
+                    proposedSwings.add(proposedSwing);
+                }
+            }
+
+            System.out.println(proposedSwings);
         }
 
         return null;
