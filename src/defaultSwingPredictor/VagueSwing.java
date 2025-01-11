@@ -16,4 +16,17 @@ public class VagueSwing implements Swing {
         enterInfo.p.x = 3 - enterInfo.p.x;
         exitInfo.p.y = 3 - exitInfo.p.y;
     }
+
+    @Override
+    public String toString() {
+        return "(" + enterInfo.p.x + ", " + enterInfo.p.y + ") -> (" + exitInfo.p.x + ", " + exitInfo.p.y + ")";
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof VagueSwing otherSwing) {
+            return enterInfo.equals(otherSwing.enterInfo) && exitInfo.equals(otherSwing.exitInfo);
+        }
+        return false;
+    }
 }

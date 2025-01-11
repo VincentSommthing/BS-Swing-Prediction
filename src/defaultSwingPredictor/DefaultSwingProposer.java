@@ -5,14 +5,15 @@ import swingPredictor.SwingProposer;
 import utils.Vec;
 import utils.VecPair;
 import utils.Constants;
-import utils.Mat;
-import utils.LinAlg;
-import utils.LinAlg.*;
+import utils.MoreMath;
+import utils.MoreMath.*;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Default swing proposer
@@ -21,7 +22,7 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
     private final double[] DIRTOROT = Constants.DIRTOROT;
     private final Vec[] DIRTOVEC = Constants.DIRTOVEC;
     
-    private final double DOTRATIOTHRESHOLD = 0.5;
+    private final double DOTRATIOTHRESHOLD = 0.7;
 
     /**
      * Gets the angle of a note, taking into account precision rotation
@@ -56,41 +57,6 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
     }
 
     /**
-     * Bezier interpolation
-     * @param p0
-     * @param p1
-     * @param p2
-     * @param t
-     * @return
-     */
-    private Vec bezier(Vec p0, Vec p1, Vec p2, double t) {
-        double a0 = Math.pow((1 - t), 2);
-        double a1 = 2 * (1 - t) * t;
-        double a2 = t * t;
-        return new Vec(
-            a0 * p0.x + a1 * p1.x + a2 * p2.x,
-            a0 * p0.y + a1 * p1.y + a2 * p2.y
-        );
-    }
-
-    /**
-     * Derivative of bezier
-     * @param p0
-     * @param p1
-     * @param p2
-     * @param t
-     * @return
-     */
-    private Vec dBezier(Vec p0, Vec p1, Vec p2, double t) {
-        double a0 = 2 * (1 - t);
-        double a1 = 2 * t;
-        return new Vec(
-            a0 * (p0.x - p1.x) + a1 * (p2.x - p1.x),
-            a0 * (p0.y - p1.y) + a1 * (p2.y - p1.y)
-        );
-    }
-
-    /**
      * Gets a pos + rot vector pair representing the end swing given a chain
      * @param chains
      * @return
@@ -117,8 +83,8 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         }
         Vec p1 = p0 .add (p2 .mul (pDist));
 
-        Vec resultPos = bezier(p0, p1, p2, chain.s);
-        Vec resultRotVec = dBezier(p0, p1, p2, chain.s);
+        Vec resultPos = MoreMath.bezier(p0, p1, p2, chain.s);
+        Vec resultRotVec = MoreMath.dBezier(p0, p1, p2, chain.s);
 
         return new VecPair(resultPos, resultRotVec.toRot());
     }
@@ -129,7 +95,7 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
      * @param swingRotVec
      * @return
      */
-    private VagueSwing getSwing(List<ColorNote> notes, Vec swingRotVec) {
+    private VagueSwing snapSwing(List<ColorNote> notes, Vec swingRotVec) {
         VecPair swingEnterInfo = null;
         VecPair swingExitInfo = null;
         // If it is nonzero, use it to determine leaving and entering info (if needed)
@@ -182,7 +148,7 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
             notes.forEach(note -> totalCutVec.addBy(getRotVec(note)));
 
             // Try using totalCutVec to determine swing enter and exit info
-            VagueSwing proposedSwing = getSwing(notes, totalCutVec);
+            VagueSwing proposedSwing = snapSwing(notes, totalCutVec);
 
             if (!chains.isEmpty()) {
                 // If there is a chain, use that to get exit info instead
@@ -191,11 +157,12 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
                 if (proposedSwing.enterInfo == null) {
                     Chain chain = chains.getFirst();
                     Vec v = getRotVec(chain);
-                    proposedSwing.enterInfo = getSwing(notes, v).enterInfo;
+                    proposedSwing.enterInfo = snapSwing(notes, v).enterInfo;
                 }
             }
 
-            List<VagueSwing> proposedSwings = new ArrayList<>();
+            Set<VagueSwing> proposedSwings = new HashSet<>();
+
             // If the proposed swing is valid, add it to the list of proposed swings
             if (proposedSwing.enterInfo != null && proposedSwing.exitInfo != null) {
                  proposedSwings.add(proposedSwing);
@@ -208,16 +175,32 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
                 Vec p2 = getPosVec(notes.getLast());
                 Vec guess = p2 .sub (p1);
                 List<Vec> notePositions = notes.stream().map(this::getPosVec).toList();
-                PCAInfo pcaInfo = LinAlg.pca(notePositions, guess);
+                PCAInfo pcaInfo = MoreMath.pca(notePositions, guess);
                 
+                // Only add swing if ratio of svs are under threshold
                 double ratio = pcaInfo.values[1] / pcaInfo.values[0];
                 if (ratio < DOTRATIOTHRESHOLD) {
-                    proposedSwing = getSwing(notes, pcaInfo.pcs[0]);
+                    proposedSwing = snapSwing(notes, pcaInfo.pcs[0]);
                     proposedSwings.add(proposedSwing);
                 }
             }
 
-            System.out.println(proposedSwings);
+            // If there is still no proposed swing, add 8 in all directions
+            if (proposedSwings.isEmpty()) {
+                for (int i = 0; i < 8; i++) {
+                    Vec v = Vec.fromRot(i);
+                    proposedSwing = snapSwing(notes, v);
+                    proposedSwings.add(proposedSwing);
+                }
+            }
+
+            // Turn vague swings into note swings
+            List<DefaultSwing> noteSwings = new ArrayList<>();
+            for (VagueSwing vagueSwing : proposedSwings) {
+                
+            }
+
+            return noteSwings;
         }
 
         return null;
