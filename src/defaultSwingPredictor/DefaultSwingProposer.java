@@ -7,6 +7,7 @@ import utils.VecPair;
 import utils.Constants;
 import utils.MoreMath;
 import utils.MoreMath.*;
+import utils.DeltaSet;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -21,6 +22,9 @@ import java.util.HashSet;
 public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
     private final double[] DIRTOROT = Constants.DIRTOROT;
     private final Vec[] DIRTOVEC = Constants.DIRTOVEC;
+    private final double TWOPI = 2 * Math.PI;
+    private final double MINROT = - 3 * Math.PI / 2;
+    private final double MAXROT = 5 * Math.PI / 4;
     
     private final double DOTRATIOTHRESHOLD = 0.7;
 
@@ -86,7 +90,7 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         Vec resultPos = MoreMath.bezier(p0, p1, p2, chain.s);
         Vec resultRotVec = MoreMath.dBezier(p0, p1, p2, chain.s);
 
-        return new VecPair(resultPos, resultRotVec.toRot());
+        return new VecPair(resultPos, resultRotVec);
     }
 
     /**
@@ -129,6 +133,28 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         return new VagueSwing(swingEnterInfo, swingExitInfo);
     }
 
+    private List<DefaultSwing> noteSwingsFromRot(VecPair enterPair, VecPair exitPair, boolean isForehand, double t0, double t1) {
+        double enterRot0 = enterPair.rot;
+        double exitRot0 = exitPair.rot;
+        Vec enterPos = enterPair.p;
+        Vec exitPos = enterPair.p;
+
+        DeltaSet enterRots = new DeltaSet(enterRot0, TWOPI, MINROT, MAXROT);
+        DeltaSet exitRots = new DeltaSet(exitRot0, TWOPI);
+
+        List<DefaultSwing> noteSwings = new ArrayList<>();
+
+        // Iterate through every enter rotation
+        for (double enterRot: enterRots) {
+            double exitRot = exitRots.getClosest(enterRot);
+            VecPair noteEnterPair = new VecPair(enterPos, enterRot);
+            VecPair noteExitPair = new VecPair(exitPos, exitRot);
+            DefaultSwing noteSwing = new DefaultNoteSwing(noteEnterPair, noteExitPair, isForehand, t0, t1);
+            noteSwings.add(noteSwing);
+        }
+        return noteSwings;
+    }
+
     @Override
     public List<DefaultSwing> propose(List<DefaultSwing> prevSwingsProposed,
         List<ColorNote> notes,
@@ -139,7 +165,7 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
         double t0,
         double t1)
     {
-        // TODO
+        // TODO: Bomb Swings
 
         // Check if there is anything to hit
         if (!notes.isEmpty() || !chains.isEmpty()) {
@@ -197,7 +223,22 @@ public class DefaultSwingProposer implements SwingProposer<DefaultSwing> {
             // Turn vague swings into note swings
             List<DefaultSwing> noteSwings = new ArrayList<>();
             for (VagueSwing vagueSwing : proposedSwings) {
-                
+                // Forehands
+                // Get enter and exit rotations
+                double enterRot = vagueSwing.enterInfo.v.toRot();
+                double exitRot = vagueSwing.exitInfo.v.toRot();
+                Vec enterPos = vagueSwing.enterInfo.p;
+                Vec exitPos = vagueSwing.exitInfo.p;
+                VecPair enterPair = new VecPair(enterPos, enterRot);
+                VecPair exitPair = new VecPair(exitPos, exitRot);
+                noteSwings.addAll(noteSwingsFromRot(enterPair, exitPair, true, t0, t1));
+
+                // Backhands
+                enterRot += Math.PI;
+                exitRot += Math.PI;
+                enterPair = new VecPair(enterPos, enterRot);
+                exitPair = new VecPair(exitPos, exitRot);
+                noteSwings.addAll(noteSwingsFromRot(enterPair, exitPair, false, t0, t1));
             }
 
             return noteSwings;
