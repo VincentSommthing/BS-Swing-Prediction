@@ -11,7 +11,7 @@ public class DefaultCostFn implements CostFn<DefaultSwing> {
     static private class NoteSwingCost implements Function<DefaultNoteSwing, Double> {
         public Double apply(DefaultNoteSwing swing) {
             // TODO
-            return 0.0;
+            return Math.pow(swing.enterInfo.rot, 2);
         }
     }
     static private class ArcSwingCost implements Function<DefaultArcSwing, Double> {

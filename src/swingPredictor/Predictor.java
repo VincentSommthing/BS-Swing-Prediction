@@ -12,8 +12,9 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class Predictor<T extends Swing> {
-    // Margin for equality (in case of precision errors)
     final private double EPS = Constants.EPS;
+    final double SECONDSPERMINUTE = 60.0; // Seconds per minute
+
 
     /**
      * Represents two lists, one for each color
@@ -157,6 +158,133 @@ public class Predictor<T extends Swing> {
     private CostFn<T> costFn;
     private double bombWindowSize;
 
+    private List<List<T>> propose(
+        BeatmapV3 beatmap,
+        double bpm,
+        List<BeatPair<Bomb>> beatPairBombs,
+        List<BeatPair<BpmEvent>> beatPairBpms,
+        List<ColorNote> colorNotes,
+        List<Arc> arcs,
+        List<Chain> chains)
+    {
+        // Make everything into beat pairs
+        List<BeatPair<ColorNote>> beatPairNotes = toBeatPairs(colorNotes);
+        List<BeatPair<Arc>> beatPairArcHeads = toBeatPairs(arcs);
+        List<BeatPair<Chain>> beatPairChains = toBeatPairs(chains);
+        List<BeatPair<Arc>> beatPairArcTails = toBeatPairs(arcs, BeatPairTail::new);
+
+        // Combine all beat groups
+        List<BeatPair<?>> beatPairs = new ArrayList<>();
+        beatPairs.addAll(beatPairNotes);
+        beatPairs.addAll(beatPairArcHeads);
+        beatPairs.addAll(beatPairChains);
+        beatPairs.addAll(beatPairArcTails);
+        beatPairs.addAll(beatPairBombs);
+        beatPairs.addAll(beatPairBpms);
+
+        List<BeatGroup<?>> beatGroups = groupByBeat(beatPairs);
+
+        // Sort
+        beatPairs.sort(BeatGroup::compare);
+
+        List<List<T>> proposedSwings = new ArrayList<>();
+
+        List<ColorNote> currNotes = null;
+        List<Arc> currArcHeads = null;
+        List<Arc> currArcTails = null;
+        List<Chain> currChains = null;
+        List<Bomb> currBombs = null;
+        boolean requiresInit = true;
+        boolean onlyBombs = true;
+        double beat = 0.0;
+        double time = 0.0;
+        double currStartTime = 0.0;
+        double currEndBeat = 0.0;
+
+        // Group by beat
+        for (BeatGroup<?> beatGroup : beatGroups) {
+            // calculate time of beatGroup
+            double dbeat = beatGroup.beat - beat;
+            double dt = dbeat / bpm * SECONDSPERMINUTE;
+
+            beat = beatGroup.beat;
+            time += dt;
+
+            // prose swings if these conditions are met
+            if (!requiresInit // everything is already initialized
+                && (beatGroup.stream().anyMatch(a -> a instanceof ColorNote || a instanceof Chain) // current beatGroup containts note or chain
+                || (onlyBombs && time > currStartTime + bombWindowSize + EPS) // outside bomb window
+                || (!onlyBombs && beat > currEndBeat + EPS)) // outside current end beat
+            ) {
+                List<T> prevSwings = null;
+                if (!proposedSwings.isEmpty()) {
+                    prevSwings = proposedSwings.getLast();
+                }
+                // Propose swings
+                List<T> currProposedSwings = proposer.propose(
+                    prevSwings,
+                    currNotes,
+                    currArcHeads,
+                    currArcTails,
+                    currChains,
+                    currBombs,
+                    currStartTime,
+                    time - (beat - currEndBeat) / bpm * SECONDSPERMINUTE);
+
+                if (currProposedSwings != null) {
+                    proposedSwings.add(currProposedSwings);
+                }
+
+                // require initialization for next set of beat objects
+                requiresInit = true;
+            }
+
+            // Initialize if required
+            if (requiresInit) {
+                currNotes = new ArrayList<>();
+                currArcHeads = new ArrayList<>();
+                currArcTails = new ArrayList<>();
+                currChains = new ArrayList<>();
+                currBombs = new ArrayList<>();
+                currStartTime = time;
+                currEndBeat = beat;
+                requiresInit = false;
+                onlyBombs = true;
+            }
+            
+            // Iterate through beat grup and add everything
+            for (Object obj : beatGroup) {
+                if (obj instanceof BpmEvent bpmEvent) {
+                    // If the object is a bpm event, change the bpm
+                    bpm = bpmEvent.m;
+
+                } else if (obj instanceof ColorNote note) {
+                    currNotes.add(note);
+                    onlyBombs = false;
+
+                } else if (obj instanceof Arc arc) {
+                    if (arc.tb <= currEndBeat + EPS) {
+                        currArcTails.add(arc);
+                    } else {
+                        currArcHeads.add(arc);
+                    }
+                    onlyBombs = false;
+
+                } else if (obj instanceof Chain chain) {
+                    currChains.add(chain);
+                    currEndBeat = Math.max(currEndBeat, chain.tb);
+                    onlyBombs = false;
+
+                } else if (obj instanceof Bomb bomb) {
+                    currBombs.add(bomb);
+                }
+            }
+            currEndBeat = Math.max(currEndBeat, beat);
+
+        }
+        return proposedSwings;
+    }
+
     /**
      * Constructor
      * @param swingProposer
@@ -178,7 +306,6 @@ public class Predictor<T extends Swing> {
      */
     public List<T> predict(BeatmapV3 beatmap, double bpm) {
         // TODO Implement predict
-        final double SECONDSPERMINUTE = 60.0; // Seconds per minute
 
         // Separate colorNotes, arcs, chains by color
         ColorSeparatedPair<List<ColorNote>> colorSeparatedNotes = separateByColor(beatmap.colorNotes);
@@ -196,117 +323,7 @@ public class Predictor<T extends Swing> {
             List<Arc> arcs = colorSeparatedArcs.get(i);
             List<Chain> chains = colorSeparatedChains.get(i);
 
-            // Make everything into beat pairs
-            List<BeatPair<ColorNote>> beatPairNotes = toBeatPairs(colorNotes);
-            List<BeatPair<Arc>> beatPairArcHeads = toBeatPairs(arcs);
-            List<BeatPair<Chain>> beatPairChains = toBeatPairs(chains);
-            List<BeatPair<Arc>> beatPairArcTails = toBeatPairs(arcs, BeatPairTail::new);
-
-            // Combine all beat groups
-            List<BeatPair<?>> beatPairs = new ArrayList<>();
-            beatPairs.addAll(beatPairNotes);
-            beatPairs.addAll(beatPairArcHeads);
-            beatPairs.addAll(beatPairChains);
-            beatPairs.addAll(beatPairArcTails);
-            beatPairs.addAll(beatPairBombs);
-            beatPairs.addAll(beatPairBpms);
-
-            List<BeatGroup<?>> beatGroups = groupByBeat(beatPairs);
-
-            // Sort
-            beatPairs.sort(BeatGroup::compare);
-
-            List<List<T>> proposedSwings = new ArrayList<>();
-
-            List<ColorNote> currNotes = null;
-            List<Arc> currArcHeads = null;
-            List<Arc> currArcTails = null;
-            List<Chain> currChains = null;
-            List<Bomb> currBombs = null;
-            boolean requiresInit = true;
-            boolean onlyBombs = true;
-            double beat = 0.0;
-            double time = 0.0;
-            double currStartTime = 0.0;
-            double currEndBeat = 0.0;
-
-            // Group by beat
-            for (BeatGroup<?> beatGroup : beatGroups) {
-                // calculate time of beatGroup
-                double dbeat = beatGroup.beat - beat;
-                double dt = dbeat / bpm * SECONDSPERMINUTE;
-
-                beat = beatGroup.beat;
-                time += dt;
-
-                // prose swings if these conditions are met
-                if (!requiresInit // everything is already initialized
-                    && (beatGroup.stream().anyMatch(a -> a instanceof ColorNote || a instanceof Chain) // current beatGroup containts note or chain
-                    || (onlyBombs && time > currStartTime + bombWindowSize + EPS) // outside bomb window
-                    || (!onlyBombs && beat > currEndBeat + EPS)) // outside current end beat
-                ) {
-                    List<T> prevSwings = null;
-                    if (!proposedSwings.isEmpty()) {
-                        prevSwings = proposedSwings.getLast();
-                    }
-                    // Propose swings
-                    proposedSwings.add(proposer.propose(
-                        prevSwings,
-                        currNotes,
-                        currArcHeads,
-                        currArcTails,
-                        currChains,
-                        currBombs,
-                        currStartTime,
-                        time - (beat - currEndBeat) / bpm * SECONDSPERMINUTE));
-
-                    // require initialization for next set of beat objects
-                    requiresInit = true;
-                }
-
-                // Initialize if required
-                if (requiresInit) {
-                    currNotes = new ArrayList<>();
-                    currArcHeads = new ArrayList<>();
-                    currArcTails = new ArrayList<>();
-                    currChains = new ArrayList<>();
-                    currBombs = new ArrayList<>();
-                    currStartTime = time;
-                    currEndBeat = beat;
-                    requiresInit = false;
-                    onlyBombs = true;
-                }
-                
-                // Iterate through beat grup and add everything
-                for (Object obj : beatGroup) {
-                    if (obj instanceof BpmEvent bpmEvent) {
-                        // If the object is a bpm event, change the bpm
-                        bpm = bpmEvent.m;
-
-                    } else if (obj instanceof ColorNote note) {
-                        currNotes.add(note);
-                        onlyBombs = false;
-
-                    } else if (obj instanceof Arc arc) {
-                        if (arc.tb <= currEndBeat + EPS) {
-                            currArcTails.add(arc);
-                        } else {
-                            currArcHeads.add(arc);
-                        }
-                        onlyBombs = false;
-
-                    } else if (obj instanceof Chain chain) {
-                        currChains.add(chain);
-                        currEndBeat = Math.max(currEndBeat, chain.tb);
-                        onlyBombs = false;
-
-                    } else if (obj instanceof Bomb bomb) {
-                        currBombs.add(bomb);
-                    }
-                }
-                currEndBeat = Math.max(currEndBeat, beat);
-
-            }
+            List<List<T>> proposedSwings = propose(beatmap, bpm, beatPairBombs, beatPairBpms, colorNotes, arcs, chains);
         }
 
 
