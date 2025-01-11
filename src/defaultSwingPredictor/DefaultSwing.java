@@ -38,7 +38,17 @@ public class DefaultSwing extends VagueSwing {
 
     @Override
     public String toString() {
-        // return String.valueOf(this.t0) + " " + String.valueOf(this.t1);
-        return String.valueOf(this.t1 - this.t0);
+        int dir = (int) Math.round(this.enterInfo.rot / (Math.PI / 8));
+        if (isForehand) {
+            dir += 4;
+        }
+        dir = Math.floorMod(dir, 8);
+        return String.valueOf("↓↘→↗↑↖←↙".charAt(dir));
+        // return String.valueOf(this.enterInfo.rot);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return this == other;
     }
 }

@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Comparator;
 
 public class Predictor<T extends Swing> {
     final private double EPS = Constants.EPS;
@@ -158,6 +161,17 @@ public class Predictor<T extends Swing> {
     private CostFn<T> costFn;
     private double bombWindowSize;
 
+    /**
+     * Proposes swings using the proposer
+     * @param beatmap
+     * @param bpm
+     * @param beatPairBombs
+     * @param beatPairBpms
+     * @param colorNotes
+     * @param arcs
+     * @param chains
+     * @return
+     */
     private List<List<T>> propose(
         BeatmapV3 beatmap,
         double bpm,
@@ -285,6 +299,74 @@ public class Predictor<T extends Swing> {
         return proposedSwings;
     }
 
+
+    /**
+     * Calculates the sequence of swings that minimzes the cost given a list of proposed swings
+     * @param proposedSwings
+     * @return
+     */
+    private List<T> predict(List<List<T>> proposedSwings) {
+        // TODO
+        List<T> output = new ArrayList<>();
+
+
+        // If the list of proposed swings is empty, return.
+        if (proposedSwings.isEmpty()) {
+            return output;
+        }
+
+        Map<T, Double> costs = new HashMap<>();
+        Map<T, T> bestPrevSwings = new HashMap<>();
+        // Populate the cost map with the first set of swings
+        for (T swing : proposedSwings.getFirst()) {
+            costs.put(swing, costFn.swingCost(swing));
+        }
+
+        for (int i = 1; i < proposedSwings.size(); i++) {
+            List<T> currSwings = proposedSwings.get(i);
+            List<T> prevSwings = proposedSwings.get(i - 1);
+            // Iterate through all current swings
+            for (T currSwing : currSwings) {
+                // Keep track of best cost and prev swing so far
+                double bestCost = Double.POSITIVE_INFINITY;
+                T bestPrevSwing = null;
+
+                // iterate through all previous swings
+                for (T prevSwing : prevSwings) {
+                    // Calculate the total cost
+                    double transitionCost = costFn.transitionCost(prevSwing, currSwing);
+                    double swingCost = costFn.swingCost(currSwing);
+                    double prevCost = costs.get(prevSwing);
+                    double totalCost = prevCost + transitionCost + swingCost;
+
+                    // Replace the current cost and bestPrevSwing if it is better
+                    if (totalCost < bestCost) {
+                        bestCost = totalCost;
+                        bestPrevSwing = prevSwing;
+                    }
+                }
+
+                // Store the best cost and swing calculated
+                costs.put(currSwing, bestCost);
+                bestPrevSwings.put(currSwing, bestPrevSwing);
+            }
+        }
+
+        // Get ending swing with the best cost
+        T currSwing = proposedSwings
+            .getLast()
+            .stream()
+            .max(Comparator.comparing(costs::get))
+            .get();
+        // Go backwards and add the optimal swings into output array
+        while (bestPrevSwings.containsKey(currSwing)) {
+            output.addFirst(currSwing);
+            currSwing = bestPrevSwings.get(currSwing);
+        }
+
+        return output;
+    }
+
     /**
      * Constructor
      * @param swingProposer
@@ -304,7 +386,7 @@ public class Predictor<T extends Swing> {
      * @param beatmap beatmap object
      * @return list of swings
      */
-    public List<T> predict(BeatmapV3 beatmap, double bpm) {
+    public List<List<T>> predict(BeatmapV3 beatmap, double bpm) {
         // TODO Implement predict
 
         // Separate colorNotes, arcs, chains by color
@@ -316,6 +398,8 @@ public class Predictor<T extends Swing> {
         List<BeatPair<Bomb>> beatPairBombs = toBeatPairs(beatmap.bombNotes);
         List<BeatPair<BpmEvent>> beatPairBpms = toBeatPairs(beatmap.bpmEvents);
 
+        List<List<T>> output = new ArrayList<>();
+
         // Iterate through each color
         for (int i = 0; i < 2; i++) {
             // Isolate the beatmap objects corresponding to color i
@@ -324,9 +408,11 @@ public class Predictor<T extends Swing> {
             List<Chain> chains = colorSeparatedChains.get(i);
 
             List<List<T>> proposedSwings = propose(beatmap, bpm, beatPairBombs, beatPairBpms, colorNotes, arcs, chains);
+            List<T> predictedSwings = predict(proposedSwings);
+            output.add(predictedSwings);
         }
 
 
-        return null;
+        return output;
     }
 }

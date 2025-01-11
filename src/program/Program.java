@@ -35,7 +35,9 @@ public class Program {
 
         long t0 = System.nanoTime();
 
-        List<DefaultSwing> swings = predictor.predict(beatmap, bpmV3);
+        List<List<DefaultSwing>> swings = predictor.predict(beatmap, bpmV3);
+
+        System.out.println(swings);
 
         long t1 = System.nanoTime();
         System.out.println("Calculation time: " + String.valueOf((t1 - t0) * 1e-6) + " ms.");
